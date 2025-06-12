@@ -34,6 +34,17 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Retro Athletics Colors
+        'track-red': "hsl(var(--track-red))",
+        'timing-yellow': "hsl(var(--timing-yellow))",
+        'lane-white': "hsl(var(--lane-white))",
+        'retro-gold': "hsl(var(--retro-gold))",
+        'marathon-green': "hsl(var(--marathon-green))",
+        'vintage-maroon': "hsl(var(--vintage-maroon))",
+        'copper-bronze': "hsl(var(--copper-bronze))",
+        'worn-leather': "hsl(var(--worn-leather))",
+        'dusty-tan': "hsl(var(--dusty-tan))",
+        'starting-block': "hsl(var(--starting-block))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -50,6 +61,7 @@ export default {
         "fade-in-down": "fade-in-down 0.5s ease-in-out",
         "slide-in-left": "slide-in-left 0.5s ease-in-out",
         "slide-in-right": "slide-in-right 0.5s ease-in-out",
+        "spin-slow": "spin 8s linear infinite",
       },
       keyframes: {
         "fade-in": {

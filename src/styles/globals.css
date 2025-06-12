@@ -6,6 +6,7 @@
 
 @layer base {
   :root {
+    /* Base semantic colors */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -26,9 +27,34 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
+    
+    /* Retro Athletics Color Palette */
+    --track-red: 14 70% 45%;        /* Classic track surface red */
+    --timing-yellow: 45 100% 60%;   /* Vintage timing board yellow */
+    --lane-white: 0 0% 95%;         /* Track lane markings */
+    --retro-gold: 38 85% 65%;       /* 1970s athletic gear gold */
+    --marathon-green: 140 40% 35%;  /* Vintage Boston Athletic green */
+    --vintage-maroon: 355 45% 35%;  /* Classic team colors */
+    --copper-bronze: 25 60% 45%;    /* Medal/trophy colors */
+    --worn-leather: 30 30% 40%;     /* Vintage equipment */
+    --dusty-tan: 35 25% 65%;        /* Weathered track surface */
+    --starting-block: 210 15% 25%;  /* Equipment gray */
+    
+    /* Athletics-specific gradients */
+    --track-gradient: linear-gradient(135deg, 
+      hsl(var(--track-red)) 0%, 
+      hsl(var(--copper-bronze)) 50%, 
+      hsl(var(--vintage-maroon)) 100%);
+    --timing-gradient: linear-gradient(90deg,
+      hsl(var(--timing-yellow)) 0%,
+      hsl(var(--retro-gold)) 100%);
+    --vintage-gradient: linear-gradient(45deg,
+      hsl(var(--worn-leather)) 0%,
+      hsl(var(--dusty-tan)) 100%);
   }
 
   .dark {
+    /* Dark mode base colors */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
@@ -48,6 +74,18 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+    
+    /* Retro Athletics Colors - Dark Mode Variants */
+    --track-red: 14 55% 35%;        /* Muted track red */
+    --timing-yellow: 45 75% 50%;    /* Dimmed timing yellow */
+    --lane-white: 0 0% 85%;         /* Softer lane markings */
+    --retro-gold: 38 70% 55%;       /* Muted gold */
+    --marathon-green: 140 35% 30%;  /* Darker green */
+    --vintage-maroon: 355 40% 30%;  /* Deeper maroon */
+    --copper-bronze: 25 50% 40%;    /* Darker bronze */
+    --worn-leather: 30 25% 35%;     /* Darker leather */
+    --dusty-tan: 35 20% 55%;        /* Muted tan */
+    --starting-block: 210 20% 30%;  /* Lighter equipment gray */
   }
 }
 
@@ -86,6 +124,8 @@ html {
 /* Custom utilities */
 .gradient-text {
   @apply bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent;
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease-in-out infinite;
 }
 
 .glass {
@@ -94,4 +134,33 @@ html {
 
 .glass-dark {
   @apply backdrop-blur-md bg-black/20 border border-white/10;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+/* Custom animations */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
 }
