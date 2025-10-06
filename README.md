@@ -8,36 +8,25 @@ This project is configured for two domains:
 
 ### Setting up casey.is-a.dev
 
-The `casey.json` file in the root directory contains the is-a.dev domain configuration. To activate this free subdomain:
+**📋 What's Ready:**
+- ✅ `casey.json` - Domain configuration file (ready to submit)
+- ✅ `submit-domain.sh` - Automated submission script  
+- ✅ [`DOMAIN-SETUP-INSTRUCTIONS.md`](./DOMAIN-SETUP-INSTRUCTIONS.md) - Detailed setup guide
 
-1. **Fork the is-a.dev repository**
-   ```bash
-   # Visit https://github.com/is-a-dev/register
-   # Click "Fork" to create your own copy
-   ```
+**🚀 To Submit:**
 
-2. **Add the domain configuration**
-   ```bash
-   # In your fork, create: domains/casey.json
-   # Copy the contents from this repo's casey.json
-   ```
+**Option 1: Automated (if you have GitHub CLI)**
+```bash
+./submit-domain.sh
+```
 
-3. **Submit a Pull Request**
-   - Create a PR from your fork to the main is-a.dev repository
-   - Title: "Add casey.is-a.dev"
-   - Wait for approval (usually within 24-48 hours)
+**Option 2: Manual Submission**  
+See [`DOMAIN-SETUP-INSTRUCTIONS.md`](./DOMAIN-SETUP-INSTRUCTIONS.md) for complete step-by-step instructions.
 
-4. **Configure Vercel**
-   Once the PR is approved:
-   - Go to your Vercel project settings
-   - Add `casey.is-a.dev` as a custom domain
-   - Vercel will automatically handle the DNS validation
-
-5. **(Optional) Update site URL**
-   If you want to use casey.is-a.dev as the primary domain, update `astro.config.mjs`:
-   ```javascript
-   site: 'https://casey.is-a.dev',
-   ```
+**After PR Approval:**
+1. Add `casey.is-a.dev` to your Vercel project as a custom domain
+2. Vercel will automatically handle DNS validation
+3. Your site will be live at https://casey.is-a.dev! 🎉
 
 ### DNS Configuration
 The domain uses a CNAME record pointing to `cname.vercel-dns.com`, which allows Vercel to serve the site at casey.is-a.dev.
