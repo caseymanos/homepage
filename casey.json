@@ -1,0 +1,11 @@
+{
+  "description": "Casey Manos Portfolio - Modern developer portfolio with Substack integration",
+  "repo": "https://github.com/caseymanos/homepage",
+  "owner": {
+    "username": "caseymanos",
+    "email": "casey@caseymanos.com"
+  },
+  "record": {
+    "CNAME": "cname.vercel-dns.com"
+  }
+}

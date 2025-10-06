@@ -5,7 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 **Casey Manos Portfolio Website** - Modern, professional portfolio with Substack integration
-- Domain: `caseymanos.com`
+- **Primary Domain**: `caseymanos.com`
+- **Free Subdomain**: `casey.is-a.dev` (pending is-a.dev registration)
 - Status: Production-ready, fully configured for Vercel deployment
 - License: MIT
 
