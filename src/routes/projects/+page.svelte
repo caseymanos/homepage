@@ -205,7 +205,7 @@
 		width: 100%;
 		padding: 1rem 1.25rem;
 		margin-bottom: 2rem;
-		background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+		background: var(--bg-secondary);
 		border: 1px solid #6366f1;
 		border-radius: 0.5rem;
 		cursor: pointer;
@@ -214,7 +214,6 @@
 	}
 
 	.space-button:hover {
-		background: linear-gradient(135deg, #1f1f3a 0%, #1a2744 100%);
 		border-color: #818cf8;
 		transform: translateY(-2px);
 		box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
@@ -231,12 +230,12 @@
 	}
 
 	.space-text strong {
-		color: white;
+		color: var(--text-primary);
 		font-size: 1rem;
 	}
 
 	.space-text small {
-		color: rgba(255, 255, 255, 0.6);
+		color: var(--text-secondary);
 		font-size: 0.75rem;
 	}
 
@@ -273,20 +272,11 @@
 
 	.project.featured {
 		border-color: #f97316;
-		background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(249, 115, 22, 0.05) 100%);
+		background: var(--bg-secondary);
 	}
 
 	.project.featured:hover {
 		border-color: #fb923c;
-		background: linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 100%);
-	}
-
-	.project.featured h2 {
-		color: #fff;
-	}
-
-	.project.featured .description {
-		color: rgba(255, 255, 255, 0.85);
 	}
 
 	.featured-badge {

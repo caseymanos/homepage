@@ -11,11 +11,11 @@
 		{ href: '/', label: 'About' },
 		{ href: '/resume', label: 'Resume' },
 		{ href: '/writings', label: 'Writings' },
-		{ href: '/projects', label: 'Dive' }
+		{ href: '/projects', label: 'Projects' }
 	];
 
-	// Projects page uses full-screen immersive layout
-	let isImmersive = $derived($page.url.pathname === '/projects');
+	// Only use immersive layout when explicitly triggered (not for projects page anymore)
+	let isImmersive = $derived(false);
 </script>
 
 <svelte:head>
