@@ -1,0 +1,2014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EP-133 Interactive Guide</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes fadeIn { 
+      from { opacity: 0; transform: translateY(-8px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+    .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+    
+    @keyframes pulseGlow {
+      0%, 100% { 
+        filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.8)) drop-shadow(0 0 16px rgba(249, 115, 22, 0.5));
+        transform: scale(1);
+      }
+      50% { 
+        filter: drop-shadow(0 0 16px rgba(249, 115, 22, 1)) drop-shadow(0 0 32px rgba(249, 115, 22, 0.8));
+        transform: scale(1.08);
+      }
+    }
+    
+    @keyframes tapPulse {
+      0% { 
+        filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.6));
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% { 
+        filter: drop-shadow(0 0 20px rgba(249, 115, 22, 1)) drop-shadow(0 0 40px rgba(249, 115, 22, 0.9));
+        transform: scale(1.15);
+        opacity: 1;
+      }
+      100% { 
+        filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.6));
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    .highlight-button {
+      animation: pulseGlow 1.2s ease-in-out infinite;
+      transform-origin: center;
+      transform-box: fill-box;
+    }
+    
+    .tap-pulse {
+      animation: tapPulse 0.4s ease-out;
+      transform-origin: center;
+      transform-box: fill-box;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Mock storage API using localStorage
+    window.storage = {
+      get: async (key) => {
+        try {
+          const value = localStorage.getItem(key);
+          return value ? { value } : null;
+        } catch (e) {
+          return null;
+        }
+      },
+      set: async (key, value) => {
+        try {
+          localStorage.setItem(key, value);
+        } catch (e) {
+          console.error('Storage set error:', e);
+        }
+      },
+      delete: async (key) => {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          console.error('Storage delete error:', e);
+        }
+      }
+    };
+
+    const EP133Guide = () => {
+      const [activeTab, setActiveTab] = useState('home');
+      const [selectedPart, setSelectedPart] = useState(null);
+      const [expandedLesson, setExpandedLesson] = useState(null);
+      const [completedLessons, setCompletedLessons] = useState({});
+      const [expandedTip, setExpandedTip] = useState(null);
+      const [practiceStep, setPracticeStep] = useState(0);
+      const [practiceMode, setPracticeMode] = useState(false);
+      const [loaded, setLoaded] = useState(false);
+      const [showCheatsheet, setShowCheatsheet] = useState(false);
+      
+      // Interactive lesson mode state
+      const [interactiveMode, setInteractiveMode] = useState(false);
+      const [interactiveStep, setInteractiveStep] = useState(0);
+      const [animationSpeed, setAnimationSpeed] = useState(1);
+      const [isTapping, setIsTapping] = useState(false);
+      const [tapCount, setTapCount] = useState(0);
+      const [isMobile, setIsMobile] = useState(false);
+      const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+      const [autoPlayInterval, setAutoPlayInterval] = useState(null);
+      
+      // Check screen size for responsive layout
+      useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+      }, []);
+      
+      // Clean up auto-play interval when interactive mode closes
+      useEffect(() => {
+        if (!interactiveMode && autoPlayInterval) {
+          clearInterval(autoPlayInterval);
+          setAutoPlayInterval(null);
+          setIsAutoPlaying(false);
+        }
+      }, [interactiveMode]);
+      
+      // Button coordinate mapping for highlights (x, y, width, height)
+      const buttonMap = {
+        // Top row ports
+        power: { x: 258, y: 14, w: 46, h: 16, rx: 2 },
+        output: { x: 16, y: 14, w: 40, h: 16, rx: 2 },
+        input: { x: 62, y: 14, w: 32, h: 16, rx: 2 },
+        
+        // Volume
+        volume: { x: 20, y: 138, w: 28, h: 28, rx: 14, isCircle: true, cx: 34, cy: 152, r: 14 },
+        
+        // Top control buttons
+        sound: { x: 58, y: 128, w: 44, h: 28, rx: 3 },
+        main: { x: 106, y: 128, w: 44, h: 28, rx: 3 },
+        commit: { x: 106, y: 128, w: 44, h: 28, rx: 3 },
+        tempo: { x: 154, y: 128, w: 44, h: 28, rx: 3 },
+        
+        // Dials
+        bpmDial: { x: 228, y: 135, w: 40, h: 40, rx: 20, isCircle: true, cx: 248, cy: 155, r: 20 },
+        
+        // Left column buttons
+        keys: { x: 16, y: 192, w: 36, h: 20, rx: 3 },
+        fader: { x: 16, y: 218, w: 36, h: 20, rx: 3 },
+        faderSlider: { x: 17, y: 248, w: 14, h: 130, rx: 2 },
+        shift: { x: 16, y: 392, w: 36, h: 20, rx: 3 },
+        
+        // Group buttons
+        groupA: { x: 58, y: 192, w: 28, h: 36, rx: 3 },
+        groupB: { x: 58, y: 244, w: 28, h: 36, rx: 3 },
+        groupC: { x: 58, y: 296, w: 28, h: 36, rx: 3 },
+        groupD: { x: 58, y: 348, w: 28, h: 36, rx: 3 },
+        groups: { x: 58, y: 192, w: 28, h: 208, rx: 3 },
+        
+        // Number pads
+        pad7: { x: 92, y: 192, w: 30, h: 36, rx: 3 },
+        pad8: { x: 125, y: 192, w: 30, h: 36, rx: 3 },
+        pad9: { x: 158, y: 192, w: 30, h: 36, rx: 3 },
+        padDot1: { x: 191, y: 192, w: 30, h: 36, rx: 3 },
+        pad4: { x: 92, y: 244, w: 30, h: 36, rx: 3 },
+        pad5: { x: 125, y: 244, w: 30, h: 36, rx: 3 },
+        pad6: { x: 158, y: 244, w: 30, h: 36, rx: 3 },
+        pad1: { x: 92, y: 296, w: 30, h: 36, rx: 3 },
+        pad2: { x: 125, y: 296, w: 30, h: 36, rx: 3 },
+        pad3: { x: 158, y: 296, w: 30, h: 36, rx: 3 },
+        padDot2: { x: 92, y: 348, w: 30, h: 36, rx: 3 },
+        pad0: { x: 125, y: 348, w: 30, h: 36, rx: 3 },
+        enter: { x: 158, y: 348, w: 30, h: 36, rx: 3 },
+        pads: { x: 92, y: 192, w: 129, h: 192, rx: 3 },
+        
+        // Right side buttons
+        sample: { x: 228, y: 192, w: 34, h: 28, rx: 3 },
+        chop: { x: 228, y: 224, w: 34, h: 22, rx: 3 },
+        timing: { x: 268, y: 192, w: 38, h: 28, rx: 3 },
+        correct: { x: 268, y: 224, w: 38, h: 22, rx: 3 },
+        fx: { x: 228, y: 260, w: 34, h: 28, rx: 3 },
+        outputBtn: { x: 228, y: 292, w: 34, h: 22, rx: 3 },
+        erase: { x: 268, y: 260, w: 38, h: 28, rx: 3 },
+        system: { x: 268, y: 292, w: 38, h: 22, rx: 3 },
+        minus: { x: 228, y: 328, w: 36, h: 36, rx: 3 },
+        plus: { x: 270, y: 328, w: 36, h: 36, rx: 3 },
+        plusMinus: { x: 228, y: 328, w: 78, h: 36, rx: 3 },
+        
+        // Record and Play
+        record: { x: 228, y: 378, w: 36, h: 36, rx: 4 },
+        play: { x: 270, y: 378, w: 36, h: 36, rx: 4 },
+      };
+      
+      // Parse step text to identify which buttons to highlight
+      const parseStepForButtons = (stepText) => {
+        const text = stepText.toLowerCase();
+        const result = { buttons: [], pulseCount: 1 };
+        
+        // Check for rhythm-based instructions
+        if (text.includes('beats 1 and 3') || text.includes('beats 1 & 3')) {
+          result.pulseCount = 2;
+        } else if (text.includes('beats 2 and 4') || text.includes('beats 2 & 4')) {
+          result.pulseCount = 2;
+        } else if (text.includes('eighth notes') || text.includes('twice per beat')) {
+          result.pulseCount = 4;
+        } else if (text.includes('steady') && text.includes('tap')) {
+          result.pulseCount = 3;
+        }
+        
+        // Match specific buttons
+        if (text.includes('power')) result.buttons.push('power');
+        if (text.includes('volume')) result.buttons.push('volume');
+        if (text.includes('output') && !text.includes('shift')) result.buttons.push('output');
+        if (text.includes('headphones')) result.buttons.push('output');
+        
+        // Groups
+        if (text.includes('group a') || (text.includes('group') && text.includes(' a '))) {
+          result.buttons.push('groupA');
+        } else if (text.includes('group b')) {
+          result.buttons.push('groupB');
+        } else if (text.includes('group c')) {
+          result.buttons.push('groupC');
+        } else if (text.includes('group d')) {
+          result.buttons.push('groupD');
+        } else if (text.includes('group buttons') || text.includes('groups')) {
+          result.buttons.push('groups');
+        }
+        
+        // Control buttons
+        if (text.includes('play') && !text.includes('pattern')) result.buttons.push('play');
+        if (text.includes('record')) result.buttons.push('record');
+        if (text.includes('sound') && !text.includes('sounds')) result.buttons.push('sound');
+        if (text.includes('main') && !text.includes('main dial')) result.buttons.push('main');
+        if (text.includes('commit')) result.buttons.push('commit');
+        if (text.includes('tempo')) result.buttons.push('tempo');
+        if (text.includes('dial') || text.includes('bpm')) result.buttons.push('bpmDial');
+        if (text.includes('keys')) result.buttons.push('keys');
+        if (text.includes('fader') && !text.includes('slider')) result.buttons.push('fader');
+        if (text.includes('shift')) result.buttons.push('shift');
+        if (text.includes('erase')) result.buttons.push('erase');
+        if (text.includes('fx') && !text.includes('>fx')) result.buttons.push('fx');
+        if (text.includes('sample') && !text.includes('samples')) result.buttons.push('sample');
+        if (text.includes('timing')) result.buttons.push('timing');
+        
+        // Specific pads
+        if (text.includes('pad 0') || text.includes('pad0')) result.buttons.push('pad0');
+        if (text.includes('pad 1') || text.includes('pad1')) result.buttons.push('pad1');
+        if (text.includes('pad 2') || text.includes('pad2')) result.buttons.push('pad2');
+        if (text.includes('pad 3') || text.includes('pad3')) result.buttons.push('pad3');
+        if (text.includes('pad 4') || text.includes('pad4')) result.buttons.push('pad4');
+        if (text.includes('pad 5') || text.includes('pad5')) result.buttons.push('pad5');
+        if (text.includes('pad 6') || text.includes('pad6')) result.buttons.push('pad6');
+        if (text.includes('pad 7') || text.includes('pad7')) result.buttons.push('pad7');
+        if (text.includes('pad 8') || text.includes('pad8')) result.buttons.push('pad8');
+        if (text.includes('pad 9') || text.includes('pad9')) result.buttons.push('pad9');
+        
+        // Generic pads reference
+        if ((text.includes('pads') || text.includes('numbered pads') || text.includes('tap')) && result.buttons.length === 0) {
+          result.buttons.push('pads');
+        }
+        
+        // Hi-hats are usually on pads 7-9
+        if (text.includes('hi-hat') || text.includes('hihat')) {
+          result.buttons.push('pad7');
+        }
+        
+        // + and - buttons
+        if (text.includes('+') && text.includes('−')) result.buttons.push('plusMinus');
+        else if (text.includes('+ or −') || text.includes('+/−')) result.buttons.push('plusMinus');
+        
+        return result;
+      };
+
+      useEffect(() => {
+        const load = async () => {
+          try {
+            const r = await window.storage.get('ep133-dad-v2');
+            if (r?.value) setCompletedLessons(JSON.parse(r.value));
+          } catch(e) {}
+          setLoaded(true);
+        };
+        load();
+      }, []);
+
+      const saveProgress = async (p) => {
+        setCompletedLessons(p);
+        try { await window.storage.set('ep133-dad-v2', JSON.stringify(p)); } catch(e) {}
+      };
+
+      const toggleComplete = (id) => {
+        const next = { ...completedLessons, [id]: !completedLessons[id] };
+        saveProgress(next);
+      };
+
+      // Parts info with guitar analogies
+      const parts = {
+        display: {
+          name: 'Display & Branding Area',
+          desc: 'Shows "K.O. II" branding, current mode, and status info. The segmented display shows BPM, pattern numbers, and visual feedback.',
+          guitar: 'Like the logo on your guitar headstock plus a built-in tuner display.'
+        },
+        speaker: {
+          name: 'Built-in Speaker',
+          desc: 'Mono speaker for monitoring without headphones. Great for quick ideas, but use headphones or external speakers for serious work.',
+          guitar: 'Like a tiny practice amp built right in—convenient but not hi-fi.'
+        },
+        ports: {
+          name: 'I/O Ports (Top Edge)',
+          desc: 'OUTPUT (3.5mm for headphones/line out), INPUT (3.5mm for sampling), SYNC (for Pocket Operators), MIDI (in/out with adapter), USB-C (power & data), POWER switch.',
+          guitar: 'Your connection hub—like the output jack, tuner out, and power all in one row.'
+        },
+        volume: {
+          name: 'Volume Knob',
+          desc: 'Master output volume. Controls headphone and line out level. Turn it up!',
+          guitar: 'Just like your guitar\'s volume knob—simple and essential.'
+        },
+        bpmDial: {
+          name: 'BPM Dial & Display',
+          desc: 'Shows current tempo. The main encoder dial adjusts values, scrolls through options, and confirms selections. Hold TEMPO and turn to change BPM.',
+          guitar: 'Like a digital metronome display with a multi-function knob.'
+        },
+        soundBtn: {
+          name: 'SOUND / EDIT',
+          desc: 'Press SOUND to browse samples. Press SHIFT+SOUND (EDIT) to edit the selected sound\'s parameters like trim, pitch, envelope.',
+          guitar: 'SOUND = browsing your pedalboard. EDIT = tweaking individual pedal settings.'
+        },
+        mainBtn: {
+          name: 'MAIN / COMMIT',
+          desc: 'Press MAIN to see current scene/pattern and navigate. SHIFT+MAIN (COMMIT) saves your current pattern combination as a scene and creates a copy to keep editing.',
+          guitar: 'MAIN = your home screen. COMMIT = saving a loop and starting fresh.'
+        },
+        tempoBtn: {
+          name: 'TEMPO / LOOP',
+          desc: 'Hold TEMPO + turn dial to change BPM. SHIFT+TEMPO (LOOP) adjusts loop/pattern length settings.',
+          guitar: 'Like setting your metronome speed.'
+        },
+        levelPitchTime: {
+          name: 'LEVEL / PITCH / TIME',
+          desc: 'Secondary functions accessed by holding these while turning the dial. LEVEL = volume, PITCH = tuning, TIME = timing adjustments.',
+          guitar: 'Quick access to the most common tweaks—like having EQ knobs at your fingertips.'
+        },
+        keys: {
+          name: 'KEYS Button',
+          desc: 'Press to turn the pads into a chromatic keyboard playing the selected sample at different pitches. Great for melodies and chords!',
+          guitar: 'Turns your drum pads into piano keys—play melodies with one sample.'
+        },
+        fader: {
+          name: 'The Fader',
+          desc: 'Slide to control volume, FX send, filter, pan, or pitch per group. Hold FADER button to select which parameter it controls. You can record fader movements!',
+          guitar: 'Like a wah pedal slider—smooth, expressive control. Can be automated!'
+        },
+        shift: {
+          name: 'SHIFT Button',
+          desc: 'Hold to access secondary functions (shown in orange on the device). Almost every button has a SHIFT function.',
+          guitar: 'Like a "function" key—same buttons, different powers.'
+        },
+        groups: {
+          name: 'Groups A / B / C / D',
+          desc: 'Four instrument groups, each with 12 sounds and 99 patterns. Press to switch which sounds the pads trigger. A/B = drums, C = bass, D = melodic typically.',
+          guitar: 'Like switching guitars mid-song—A is rhythm, C is bass, D is lead.'
+        },
+        pads: {
+          name: 'Sound Pads (0-9, •, ENTER)',
+          desc: 'Tap to trigger sounds. Each pad also has a SECONDARY FUNCTION (see LED labels below each row). Hold a pad + turn the dial to adjust that parameter. Pads 1-3: TUNE, VEL, MOD. Pads 4-6: ATK, REL, PAN. Pads 7-9: LPF, HPF, >FX. Tap the LED labels for detailed explanations!',
+          guitar: 'Like guitar strings with built-in effects—each one plays a sound AND controls a parameter when held.'
+        },
+        sampleChop: {
+          name: 'SAMPLE / CHOP',
+          desc: 'SAMPLE enters sampling mode to record from mic or line in. CHOP (SHIFT+SAMPLE) lets you slice a sample into multiple parts. These are grouped together as a unified control.',
+          guitar: 'SAMPLE = your audio recorder. CHOP = cutting a riff into separate notes. They work together!'
+        },
+        timingCorrect: {
+          name: 'TIMING / CORRECT',
+          desc: 'TIMING + pad triggers beat repeat for fills. CORRECT (SHIFT+TIMING) opens quantize options to snap your timing to the grid. These are grouped together as a unified control.',
+          guitar: 'TIMING = instant drum fills. CORRECT = tightening up sloppy playing. They work together!'
+        },
+        fxOutput: {
+          name: 'FX / OUTPUT',
+          desc: 'FX + turn dial selects master effect (delay, reverb, distortion, chorus, filter, compressor). OUTPUT (SHIFT+FX) adjusts output settings. These are grouped together as a unified control.',
+          guitar: 'Your effects rack—choose the pedal and dial in the sound. Output controls the final mix.'
+        },
+        eraseSystem: {
+          name: 'ERASE / SYSTEM',
+          desc: 'Hold ERASE + tap pad to remove that sound from pattern. ERASE + PLAY clears pattern. SHIFT+ERASE (SYSTEM) opens system settings including Swing and Gain controls.',
+          guitar: 'ERASE = your undo button. SYSTEM = amp settings menu.'
+        },
+        swingGain: {
+          name: 'SWING & GAIN Controls',
+          desc: 'SWING adjusts the groove timing (try 55-60% for human feel). GAIN controls input/output level. Access via SYSTEM menu or tempo settings. These are part of the system configuration array.',
+          guitar: 'Swing = adding groove to your metronome. Gain = your input/output trim—like the preamp level.'
+        },
+        pad7_lpf: {
+          name: 'Pad 7 → LPF (Low Pass Filter)',
+          desc: 'Cuts the HIGH frequencies, lets LOW frequencies pass through. Turn the dial while holding pad 7 to make sounds darker/muddier. Great for creating that "underwater" or "muffled" effect. Turn left = darker, turn right = brighter.',
+          guitar: 'Like rolling off your guitar tone knob—removes the treble/brightness.'
+        },
+        pad8_hpf: {
+          name: 'Pad 8 → HPF (High Pass Filter)',
+          desc: 'Cuts the LOW frequencies, lets HIGH frequencies pass through. Turn the dial while holding pad 8 to remove bass/rumble. Great for making sounds thinner or cutting mud from a mix. Turn left = more bass, turn right = thinner.',
+          guitar: 'Like a bass cut switch on your amp—removes the low end rumble.'
+        },
+        pad9_fx: {
+          name: 'Pad 9 → >FX (Send to Effects)',
+          desc: 'Controls how much of this sound goes to the master effect (delay, reverb, etc.). Hold pad 9 + turn dial. More = wetter/more effect. Great for adding space to snares and vocals while keeping kick dry.',
+          guitar: 'Like your effects loop send—controls how much signal goes to your pedals.'
+        },
+        pad4_atk: {
+          name: 'Pad 4 → ATK (Attack Time)',
+          desc: 'How fast the sound reaches full volume. Short attack = punchy, immediate hit. Long attack = slow fade-in, softer start. Hold pad 4 + turn dial. Good for softening harsh drum hits or creating pad-like swells.',
+          guitar: 'Like using a volume pedal swell—slow attack removes the pick attack.'
+        },
+        pad5_rel: {
+          name: 'Pad 5 → REL (Release Time)',
+          desc: 'How long the sound rings out after you release the pad. Short release = tight, staccato. Long release = sustained, ringing. Hold pad 5 + turn dial. Great for making drums punchier (short) or creating ambient textures (long).',
+          guitar: 'Like the sustain/decay of a note—how long it rings before fading out.'
+        },
+        pad6_pan: {
+          name: 'Pad 6 → PAN (Stereo Position)',
+          desc: 'Moves the sound left or right in the stereo field. Center = both speakers equally. Hold pad 6 + turn dial left for left speaker, right for right speaker. Great for spreading drums across the stereo image.',
+          guitar: 'Like panning a track in a mixer—positions the sound in the left-right spectrum.'
+        },
+        pad1_tune: {
+          name: 'Pad 1 → TUNE (Pitch/Tuning)',
+          desc: 'Changes the pitch of the sample up or down. Hold pad 1 + turn dial. Turn right = higher pitch, turn left = lower pitch. Essential for making bass notes match your song key or creating pitch effects.',
+          guitar: 'Like using a pitch shifter or tuning your guitar—changes the note without changing speed.'
+        },
+        pad2_vel: {
+          name: 'Pad 2 → VEL (Velocity Sensitivity)',
+          desc: 'Controls how much your tap strength affects volume. High velocity = soft taps quiet, hard taps loud (expressive). Low velocity = consistent volume regardless of tap strength. Hold pad 2 + turn dial.',
+          guitar: 'Like pick dynamics—how much your picking strength affects the sound.'
+        },
+        pad3_mod: {
+          name: 'Pad 3 → MOD (Modulation)',
+          desc: 'Adds movement/wobble to the sound using the pressure sensitivity. Press harder on pads to engage modulation effects like vibrato, filter wobble, or tremolo. Hold pad 3 + turn dial to adjust intensity.',
+          guitar: 'Like a wah pedal or vibrato—adds expressive movement to the sound.'
+        },
+        plusMinus: {
+          name: '+ and − Buttons',
+          desc: 'Navigate patterns, scenes, sounds. Hold GROUP + press to change patterns. Hold MAIN + press to change scenes.',
+          guitar: 'Up/down navigation—like scrolling through amp presets.'
+        },
+        record: {
+          name: 'RECORD Button',
+          desc: 'Press to arm recording—your pad hits get captured into the pattern. Press again to stop. The pattern keeps looping.',
+          guitar: 'Same as any recorder—press to capture your performance.'
+        },
+        play: {
+          name: 'PLAY Button',
+          desc: 'Start/stop playback. Your pattern loops continuously. Press to toggle.',
+          guitar: 'Universal play button—starts the beat.'
+        }
+      };
+
+      const lessons = [
+        {
+          id: 'power',
+          title: 'Power On & First Sounds',
+          time: '5 min',
+          steps: [
+            'Flip the POWER switch on the top right edge',
+            'Turn the VOLUME knob (left side) to about halfway',
+            'Connect headphones to OUTPUT (top left) or just use the speaker',
+            'Start tapping the numbered pads (0-9)—each plays a sound!',
+            'Press different GROUP buttons (A, B, C, D on the left) and tap pads again'
+          ],
+          tip: 'The device comes pre-loaded with drums, bass, and melodic sounds. Groups A & B have drums, C has bass, D has synths.',
+          checkpoint: 'Can you find a kick, snare, hi-hat, and bass across the groups?'
+        },
+        {
+          id: 'firstbeat',
+          title: 'Record Your First Beat',
+          time: '10 min',
+          steps: [
+            'Press GROUP A (make sure you\'re in the drum group)',
+            'Press PLAY—you\'ll hear clicking (metronome)',
+            'Press RECORD (red button)—now your taps are captured',
+            'Tap pad 1 on beats 1 and 3 (kick drum)',
+            'Tap pad 2 on beats 2 and 4 (snare)',
+            'Press RECORD again to stop recording',
+            'Your beat now loops! You did it.'
+          ],
+          tip: 'Build in layers: kick first, then snare, then add more. Each recording pass ADDS to what\'s there.',
+          checkpoint: 'Is your kick-snare pattern looping cleanly?'
+        },
+        {
+          id: 'erase',
+          title: 'Fixing Mistakes',
+          time: '5 min',
+          steps: [
+            'While playing, hold ERASE + tap a pad—removes that sound',
+            'To clear the whole pattern: hold ERASE + press PLAY',
+            'To UNDO your last recording: hold SHIFT + press ERASE',
+            'Rebuild your beat using the layer approach'
+          ],
+          tip: 'SHIFT + ERASE is your best friend. It undoes the last thing you recorded!',
+          checkpoint: 'Can you erase one sound without losing the others?'
+        },
+        {
+          id: 'hihats',
+          title: 'Add Hi-Hats & Build Layers',
+          time: '10 min',
+          steps: [
+            'Get your kick-snare playing',
+            'Find the hi-hat (tap around pads 7-9)',
+            'Press RECORD',
+            'Tap steady eighth notes (twice per beat)',
+            'Press RECORD to stop',
+            'Adjust levels: hold FADER, select LVL, slide to adjust Group A volume'
+          ],
+          tip: 'Classic beat structure: kick on 1 & 3, snare on 2 & 4, hi-hats on every eighth note.',
+          checkpoint: 'Does your beat have three elements working together?'
+        },
+        {
+          id: 'groups',
+          title: 'Using Groups (Instrument Rack)',
+          time: '10 min',
+          steps: [
+            'Your drums are playing in Group A',
+            'Press GROUP C—pads now trigger BASS sounds',
+            'Press RECORD and tap out a bass note or two',
+            'Press RECORD to stop',
+            'Press GROUP D for melodic sounds—add a chord',
+            'Press GROUP A to verify drums are still there'
+          ],
+          tip: 'Think of Groups as band members: A/B = drummer, C = bassist, D = keys player.',
+          checkpoint: 'Can you hear drums, bass, and melody all playing together?'
+        },
+        {
+          id: 'tempo',
+          title: 'Tempo & Swing',
+          time: '5 min',
+          steps: [
+            'Hold the TEMPO button',
+            'Turn the main dial—watch BPM change in the display',
+            'Try 85 BPM (chill), 120 BPM (pop), 140 (energetic)',
+            'For swing: find the swing parameter in tempo settings',
+            'Swing adds human groove—try 55-60%'
+          ],
+          tip: 'Most rock/pop: 100-130 BPM. Hip-hop: 80-100 BPM. Swing makes it feel less robotic.',
+          checkpoint: 'Set tempo to 95 BPM.'
+        },
+        {
+          id: 'sounds',
+          title: 'Browse & Change Sounds',
+          time: '10 min',
+          steps: [
+            'Press SOUND to enter sample browser',
+            'Turn the dial to scroll through 999 slots',
+            'Samples are organized: kicks, snares, hats, percussion, bass, melodic',
+            'Press a pad to assign the current sound to that pad',
+            'Press SHIFT + SOUND (EDIT) to tweak the sound'
+          ],
+          tip: 'The factory library has ~300 sounds. Spend time exploring!',
+          checkpoint: 'Swap one drum sound for a different one you prefer.'
+        },
+        {
+          id: 'fx',
+          title: 'Effects: Delay, Reverb & More',
+          time: '10 min',
+          steps: [
+            'Hold FX button',
+            'Turn dial to choose: delay, reverb, distortion, chorus, filter, compressor',
+            'Release FX, then hold FX + move the FADER to send a group to the effect',
+            'More fader = more effect on that group',
+            'Try delay on your snare and hi-hats—instant depth!'
+          ],
+          tip: 'The delay is everyone\'s favorite. Send snare and hats to it, keep kick dry.',
+          checkpoint: 'Add delay to your beat. Can you hear the echo?'
+        },
+        {
+          id: 'punchin',
+          title: 'Punch-In FX (Live Performance)',
+          time: '10 min',
+          steps: [
+            'Get your beat playing',
+            'While holding pads, you trigger real-time effects:',
+            'Hold a pad firmly—different pads = different FX',
+            'Try beat repeat, filter sweeps, tape stop effects',
+            'Pressure controls intensity—press harder for more',
+            'Release to snap back to normal'
+          ],
+          tip: 'These are performance effects for fills and transitions. You can\'t mess up—it always snaps back!',
+          checkpoint: 'Create a filter sweep going into beat 1.'
+        },
+        {
+          id: 'scenes',
+          title: 'Scenes & Song Structure',
+          time: '15 min',
+          steps: [
+            'You have a beat—this is Scene 1',
+            'Hold SHIFT + press MAIN (COMMIT)',
+            'You\'re now in Scene 2 with copies of your patterns',
+            'Change something: add a fill, remove the hi-hat, vary the bass',
+            'SHIFT + MAIN again for Scene 3',
+            'Navigate: hold MAIN + press + or −'
+          ],
+          tip: 'COMMIT saves your work and clones it. Build verse → chorus → bridge this way.',
+          checkpoint: 'Create 3 scenes: intro, main beat, variation.'
+        },
+        {
+          id: 'keys',
+          title: 'Keys Mode (Melodies)',
+          time: '10 min',
+          steps: [
+            'Press GROUP D for melodic sounds',
+            'Tap a pad to select a synth sound',
+            'Press KEYS button (left side)',
+            'Pads now play that sound at different pitches!',
+            'Tap out a melody—it\'s like a mini keyboard',
+            'Press RECORD to capture your melody',
+            'Press KEYS again to exit'
+          ],
+          tip: 'Keys mode is polyphonic—hold multiple pads for chords!',
+          checkpoint: 'Record a simple 4-note melody.'
+        },
+        {
+          id: 'guitar',
+          title: 'Jam With Your Guitar!',
+          time: '15 min',
+          steps: [
+            'Build a full beat: drums (A), bass (C), maybe keys (D)',
+            'Set tempo to match your song idea',
+            'Balance with the fader—give yourself room in the mix',
+            'Press PLAY',
+            'Grab your guitar, plug into your amp',
+            'Strum along and find the chords that work!',
+            'Use scenes to switch between song sections'
+          ],
+          tip: 'This is the payoff! You have a full backing band that never gets tired.',
+          checkpoint: 'Play through a verse-chorus with your guitar over your beat.'
+        }
+      ];
+
+      const troubleshooting = [
+        { q: 'No sound at all', a: 'Check VOLUME knob (left side). Make sure headphones are in OUTPUT (top left). Verify fader isn\'t at zero.' },
+        { q: 'Wrong sounds from pads', a: 'Check which GROUP is selected (A/B/C/D on left). Press A for drums.' },
+        { q: 'Recorded wrong notes', a: 'SHIFT + ERASE = UNDO. Or hold ERASE + tap specific pad. ERASE + PLAY = clear all.' },
+        { q: 'Beat sounds robotic', a: 'Add swing! Hold TEMPO, adjust swing setting. Try 55-60%.' },
+        { q: 'Lost in menus', a: 'Press MAIN to return home. Press PLAY to start music.' },
+        { q: 'Can\'t hear effects', a: 'Hold FX + move FADER up to send that group to the effect.' },
+        { q: 'Pattern disappeared', a: 'You switched scenes or patterns. Hold MAIN + press +/− to navigate back.' }
+      ];
+
+      const practiceSteps = [
+        { text: 'Power on (switch top right)', icon: '🔌' },
+        { text: 'Turn VOLUME up (left side)', icon: '🔊' },
+        { text: 'Press GROUP A', icon: '🅰️' },
+        { text: 'Press PLAY', icon: '▶️' },
+        { text: 'Press RECORD', icon: '🔴' },
+        { text: 'Tap PAD 1 on beats 1 & 3', icon: '🥁' },
+        { text: 'Tap PAD 2 on beats 2 & 4', icon: '🪘' },
+        { text: 'Press RECORD to stop', icon: '⏹️' },
+        { text: 'Listen to your loop!', icon: '🎵' },
+        { text: 'Press RECORD, add hi-hats on pad 7', icon: '🎶' },
+        { text: 'Press GROUP C, add a bass note', icon: '🎸' },
+        { text: 'Grab your guitar and jam!', icon: '🎉' }
+      ];
+
+      const cheatsheet = [
+        { cat: 'Recording', cmds: ['RECORD = arm/disarm', 'SHIFT + ERASE = undo', 'RECORD + fader = automation'] },
+        { cat: 'Erasing', cmds: ['ERASE + pad = remove sound', 'ERASE + PLAY = clear pattern', 'SHIFT + ERASE = undo'] },
+        { cat: 'Navigation', cmds: ['GROUP + +/− = patterns', 'MAIN + +/− = scenes', 'MAIN + hold 1-9 = projects'] },
+        { cat: 'Tempo', cmds: ['Hold TEMPO + dial = BPM', 'SHIFT + TEMPO = loop settings'] },
+        { cat: 'Effects', cmds: ['Hold FX + dial = select FX', 'Hold FX + fader = send amount'] },
+        { cat: 'Fader', cmds: ['FADER + LVL/FLTR/PAN etc', 'Controls per-group'] },
+        { cat: 'Sound', cmds: ['SOUND = browse', 'SHIFT + SOUND = edit', 'KEYS = keyboard mode'] },
+        { cat: 'Scenes', cmds: ['SHIFT + MAIN = commit', 'Saves & duplicates scene'] }
+      ];
+
+      const completedCount = Object.values(completedLessons).filter(Boolean).length;
+      
+      // Interactive device with highlights for lesson mode
+      const InteractiveDevice = ({ highlightedButtons = [], isTapping = false, showLabels = true }) => {
+        const renderHighlight = (buttonId) => {
+          const btn = buttonMap[buttonId];
+          if (!btn) return null;
+          
+          if (btn.isCircle) {
+            return (
+              <circle
+                key={buttonId}
+                cx={btn.cx}
+                cy={btn.cy}
+                r={btn.r + 4}
+                fill="none"
+                stroke="#F97316"
+                strokeWidth="3"
+                className={isTapping ? 'tap-pulse' : 'highlight-button'}
+                style={{ animationDuration: `${1.2 / animationSpeed}s` }}
+              />
+            );
+          }
+          
+          return (
+            <rect
+              key={buttonId}
+              x={btn.x - 3}
+              y={btn.y - 3}
+              width={btn.w + 6}
+              height={btn.h + 6}
+              rx={btn.rx + 2}
+              fill="rgba(249, 115, 22, 0.2)"
+              stroke="#F97316"
+              strokeWidth="3"
+              className={isTapping ? 'tap-pulse' : 'highlight-button'}
+              style={{ animationDuration: `${1.2 / animationSpeed}s` }}
+            />
+          );
+        };
+        
+        return (
+          <div className="w-full max-w-sm mx-auto">
+            <svg viewBox="0 0 320 460" className="w-full rounded-lg overflow-hidden" style={{ filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.5))' }}>
+              {/* Main body - light silver/gray matching real device */}
+              <rect x="0" y="0" width="320" height="460" rx="12" fill="#D8D8D8" />
+              
+              {/* Top black section */}
+              <rect x="8" y="8" width="304" height="100" rx="6" fill="#1a1a1a" />
+              
+              {/* Ports row */}
+              <g>
+                <rect x="16" y="14" width="40" height="16" rx="2" fill="#333" stroke="#555" strokeWidth="1" />
+                <text x="36" y="25" fill="#888" fontSize="7" textAnchor="middle">OUTPUT</text>
+                
+                <rect x="62" y="14" width="32" height="16" rx="2" fill="#E85D04" stroke="#F97316" strokeWidth="1" />
+                <text x="78" y="25" fill="#fff" fontSize="7" textAnchor="middle">INPUT</text>
+                
+                <rect x="100" y="14" width="32" height="16" rx="2" fill="#333" stroke="#555" strokeWidth="1" />
+                <text x="116" y="25" fill="#888" fontSize="7" textAnchor="middle">SYNC</text>
+                
+                <rect x="138" y="14" width="32" height="16" rx="2" fill="#333" stroke="#555" strokeWidth="1" />
+                <text x="154" y="25" fill="#888" fontSize="7" textAnchor="middle">MIDI</text>
+                
+                <rect x="220" y="14" width="32" height="16" rx="2" fill="#333" stroke="#555" strokeWidth="1" />
+                <text x="236" y="25" fill="#888" fontSize="7" textAnchor="middle">USB</text>
+                
+                <rect x="258" y="14" width="46" height="16" rx="2" fill="#333" stroke="#555" strokeWidth="1" />
+                <text x="281" y="25" fill="#888" fontSize="7" textAnchor="middle">POWER</text>
+              </g>
+              
+              {/* Display area */}
+              <g>
+                <text x="24" y="55" fill="#fff" fontSize="18" fontWeight="bold" fontFamily="monospace">K.O. II</text>
+                <text x="24" y="70" fill="#E85D04" fontSize="10" fontFamily="sans-serif">サンプラー</text>
+                <text x="24" y="90" fill="#666" fontSize="8">○ 64 MB SAMPLER COMPOSER</text>
+              </g>
+              
+              {/* Speaker grille */}
+              <g>
+                <rect x="180" y="40" width="120" height="60" rx="4" fill="#222" />
+                {[...Array(8)].map((_, row) => (
+                  [...Array(15)].map((_, col) => (
+                    <circle key={`${row}-${col}`} cx={188 + col * 8} cy={48 + row * 7} r="2" fill="#333" />
+                  ))
+                ))}
+              </g>
+              
+              {/* Main control section - lighter gray */}
+              <rect x="8" y="116" width="304" height="310" rx="6" fill="#E0E0E0" />
+              
+              {/* Volume knob */}
+              <g>
+                <text x="16" y="128" fill="#666" fontSize="6">VOLUME</text>
+                <circle cx="34" cy="152" r="14" fill="#444" />
+                <circle cx="34" cy="152" r="10" fill="#333" />
+                <line x1="34" y1="140" x2="34" y2="146" stroke="#888" strokeWidth="2" />
+              </g>
+              
+              {/* Top row buttons: SOUND, MAIN, TEMPO */}
+              <g>
+                <rect x="58" y="128" width="44" height="28" rx="3" fill="#888" />
+                <text x="80" y="142" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">SOUND</text>
+                <text x="80" y="152" fill="#E85D04" fontSize="6" textAnchor="middle">EDIT</text>
+              </g>
+              
+              <g>
+                <rect x="106" y="128" width="44" height="28" rx="3" fill="#888" />
+                <text x="128" y="142" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">MAIN</text>
+                <rect x="112" y="147" width="32" height="8" rx="2" fill="#E85D04" />
+                <text x="128" y="154" fill="#fff" fontSize="5" fontWeight="bold" textAnchor="middle">COMMIT</text>
+              </g>
+              
+              <g>
+                <rect x="154" y="128" width="44" height="28" rx="3" fill="#888" />
+                <text x="176" y="142" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">TEMPO</text>
+                <text x="176" y="152" fill="#E85D04" fontSize="6" textAnchor="middle">LOOP</text>
+              </g>
+              
+              {/* LEVEL PITCH TIME labels */}
+              <g>
+                <text x="64" y="168" fill="#666" fontSize="5">○ LEVEL</text>
+                <text x="112" y="168" fill="#666" fontSize="5">○ PITCH</text>
+                <text x="160" y="168" fill="#666" fontSize="5">○ TIME</text>
+              </g>
+              
+              {/* BPM label and dials */}
+              <g>
+                <text x="224" y="124" fill="#666" fontSize="6">BPM</text>
+                <text x="278" y="124" fill="#666" fontSize="6">METRONOME</text>
+                <circle cx="248" cy="155" r="20" fill="#444" />
+                <circle cx="248" cy="155" r="17" fill="#DC2626" />
+                <circle cx="248" cy="155" r="8" fill="#333" />
+                <text x="248" y="178" fill="#666" fontSize="7" textAnchor="middle">X</text>
+                <circle cx="288" cy="155" r="14" fill="#444" />
+                <circle cx="288" cy="155" r="11" fill="#222" />
+                <text x="288" y="178" fill="#666" fontSize="7" textAnchor="middle">Y</text>
+              </g>
+              
+              {/* KEYS button */}
+              <g>
+                <rect x="16" y="192" width="36" height="20" rx="3" fill="#888" />
+                <text x="34" y="206" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">KEYS</text>
+              </g>
+              
+              {/* FADER button and slider */}
+              <g>
+                <rect x="16" y="218" width="36" height="20" rx="3" fill="#888" />
+                <text x="34" y="232" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">FADER</text>
+                <rect x="20" y="248" width="8" height="130" rx="2" fill="#444" />
+                <rect x="17" y="310" width="14" height="24" rx="2" fill="#666" stroke="#555" strokeWidth="1" />
+              </g>
+              
+              {/* SHIFT button */}
+              <g>
+                <rect x="16" y="392" width="36" height="20" rx="3" fill="#888" />
+                <text x="34" y="406" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">SHIFT</text>
+              </g>
+              
+              {/* Group buttons A B C D */}
+              <g>
+                {['A', 'B', 'C', 'D'].map((g, i) => (
+                  <g key={g}>
+                    <rect x="58" y={192 + i * 52} width="28" height="36" rx="3" fill="#888" />
+                    <text x="72" y={213 + i * 52} fill="#333" fontSize="13" fontWeight="bold" textAnchor="middle">{g}</text>
+                  </g>
+                ))}
+              </g>
+              
+              {/* Number pad grid */}
+              <g>
+                {/* Row 1: 7, 8, 9, • */}
+                {[7, 8, 9, '•'].map((n, i) => (
+                  <g key={`row1-${i}`}>
+                    <rect x={92 + i * 33} y="192" width="30" height="36" rx="3" fill="#444" />
+                    <text x={107 + i * 33} y="214" fill="#fff" fontSize="14" fontWeight="bold" textAnchor="middle">{n}</text>
+                  </g>
+                ))}
+                {/* Row 2: 4, 5, 6, blank */}
+                {[4, 5, 6, ''].map((n, i) => (
+                  <g key={`row2-${i}`}>
+                    <rect x={92 + i * 33} y="244" width="30" height="36" rx="3" fill="#444" />
+                    <text x={107 + i * 33} y="266" fill="#fff" fontSize="14" fontWeight="bold" textAnchor="middle">{n}</text>
+                  </g>
+                ))}
+                {/* Row 3: 1, 2, 3, blank */}
+                {[1, 2, 3, ''].map((n, i) => (
+                  <g key={`row3-${i}`}>
+                    <rect x={92 + i * 33} y="296" width="30" height="36" rx="3" fill="#444" />
+                    <text x={107 + i * 33} y="318" fill="#fff" fontSize="14" fontWeight="bold" textAnchor="middle">{n}</text>
+                  </g>
+                ))}
+                {/* Row 4: •, 0, ENTER */}
+                <rect x="92" y="348" width="30" height="36" rx="3" fill="#444" />
+                <text x="107" y="370" fill="#fff" fontSize="14" fontWeight="bold" textAnchor="middle">•</text>
+                <rect x="125" y="348" width="30" height="36" rx="3" fill="#444" />
+                <text x="140" y="370" fill="#fff" fontSize="14" fontWeight="bold" textAnchor="middle">0</text>
+                <rect x="158" y="348" width="30" height="36" rx="3" fill="#444" />
+                <text x="173" y="366" fill="#fff" fontSize="8" fontWeight="bold" textAnchor="middle">ENTER</text>
+              </g>
+              
+              {/* LED indicators */}
+              <g>
+                <circle cx="96" cy="232" r="3" fill="#666" />
+                <text x="110" y="235" fill="#666" fontSize="6">LPF</text>
+                <circle cx="129" cy="232" r="3" fill="#666" />
+                <text x="143" y="235" fill="#666" fontSize="6">HPF</text>
+                <circle cx="162" cy="232" r="3" fill="#666" />
+                <text x="176" y="235" fill="#666" fontSize="6">{'>'}FX</text>
+                
+                <circle cx="96" cy="284" r="3" fill="#E85D04" />
+                <text x="110" y="287" fill="#666" fontSize="6">ATK</text>
+                <circle cx="129" cy="284" r="3" fill="#E85D04" />
+                <text x="143" y="287" fill="#666" fontSize="6">REL</text>
+                <circle cx="162" cy="284" r="3" fill="#666" />
+                <text x="176" y="287" fill="#666" fontSize="6">PAN</text>
+                
+                <circle cx="96" cy="336" r="3" fill="#E85D04" />
+                <text x="110" y="339" fill="#666" fontSize="6">TUNE</text>
+                <circle cx="129" cy="336" r="3" fill="#E85D04" />
+                <text x="143" y="339" fill="#666" fontSize="6">VEL</text>
+                <circle cx="162" cy="336" r="3" fill="#666" />
+                <text x="176" y="339" fill="#666" fontSize="6">MOD</text>
+                
+                <circle cx="96" cy="388" r="3" fill="#666" />
+                <circle cx="129" cy="388" r="3" fill="#666" />
+              </g>
+              
+              {/* Right side buttons */}
+              <g>
+                <rect x="228" y="192" width="34" height="28" rx="3" fill="#E85D04" />
+                <text x="245" y="210" fill="#fff" fontSize="7" fontWeight="bold" textAnchor="middle">SAMPLE</text>
+                <rect x="228" y="224" width="34" height="22" rx="3" fill="#888" />
+                <text x="245" y="238" fill="#333" fontSize="6" fontWeight="bold" textAnchor="middle">CHOP</text>
+              </g>
+              
+              <g>
+                <rect x="268" y="192" width="38" height="28" rx="3" fill="#888" />
+                <text x="287" y="210" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">TIMING</text>
+                <rect x="268" y="224" width="38" height="22" rx="3" fill="#888" />
+                <text x="287" y="238" fill="#333" fontSize="6" fontWeight="bold" textAnchor="middle">CORRECT</text>
+              </g>
+              
+              <g>
+                <rect x="228" y="260" width="34" height="28" rx="3" fill="#888" />
+                <text x="245" y="278" fill="#333" fontSize="9" fontWeight="bold" textAnchor="middle">FX</text>
+                <rect x="228" y="292" width="34" height="22" rx="3" fill="#888" />
+                <text x="245" y="306" fill="#333" fontSize="6" fontWeight="bold" textAnchor="middle">OUTPUT</text>
+              </g>
+              
+              <g>
+                <rect x="268" y="260" width="38" height="28" rx="3" fill="#888" />
+                <text x="287" y="278" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">ERASE</text>
+                <rect x="268" y="292" width="38" height="22" rx="3" fill="#888" />
+                <text x="287" y="306" fill="#333" fontSize="6" fontWeight="bold" textAnchor="middle">SYSTEM</text>
+              </g>
+              
+              {/* - and + buttons */}
+              <g>
+                <rect x="228" y="328" width="36" height="36" rx="3" fill="#888" />
+                <text x="246" y="352" fill="#333" fontSize="20" fontWeight="bold" textAnchor="middle">−</text>
+                <rect x="270" y="328" width="36" height="36" rx="3" fill="#888" />
+                <text x="288" y="352" fill="#333" fontSize="20" fontWeight="bold" textAnchor="middle">+</text>
+              </g>
+              
+              {/* RECORD button */}
+              <g>
+                <rect x="228" y="378" width="36" height="36" rx="4" fill="#DC2626" />
+                <text x="246" y="400" fill="#fff" fontSize="7" fontWeight="bold" textAnchor="middle">RECORD</text>
+              </g>
+              
+              {/* PLAY button */}
+              <g>
+                <rect x="270" y="378" width="36" height="36" rx="4" fill="#888" />
+                <polygon points="280,388 280,404 294,396" fill="#333" />
+              </g>
+              
+              {/* Highlight overlay layer */}
+              <g>
+                {highlightedButtons.map(btnId => renderHighlight(btnId))}
+              </g>
+            </svg>
+          </div>
+        );
+      };
+
+      // Interactive device component - accurate to real EP-133
+      const DeviceMap = () => {
+        const handleClick = (part) => setSelectedPart(part);
+        const partStyle = (part) => `cursor-pointer transition-all duration-150 ${selectedPart === part ? 'brightness-125' : 'hover:brightness-110'}`;
+        
+        return (
+          <div className="w-full max-w-md mx-auto">
+            <svg viewBox="0 0 320 460" className="w-full rounded-lg overflow-hidden" style={{ filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.5))' }}>
+              {/* Main body - light silver/gray matching real device */}
+              <rect x="0" y="0" width="320" height="460" rx="12" fill="#D8D8D8" />
+              
+              {/* Top black section */}
+              <rect x="8" y="8" width="304" height="100" rx="6" fill="#1a1a1a" />
+              
+              {/* Ports row */}
+              <g onClick={() => handleClick('ports')} className={partStyle('ports')}>
+                <rect x="16" y="14" width="40" height="16" rx="2" fill="#333" stroke="#555" strokeWidth="1" />
+                <text x="36" y="25" fill="#888" fontSize="7" textAnchor="middle">OUTPUT</text>
+                
+                <rect x="62" y="14" width="32" height="16" rx="2" fill="#E85D04" stroke="#F97316" strokeWidth="1" />
+                <text x="78" y="25" fill="#fff" fontSize="7" textAnchor="middle">INPUT</text>
+                
+                <rect x="100" y="14" width="32" height="16" rx="2" fill="#333" stroke="#555" strokeWidth="1" />
+                <text x="116" y="25" fill="#888" fontSize="7" textAnchor="middle">SYNC</text>
+                
+                <rect x="138" y="14" width="32" height="16" rx="2" fill="#333" stroke="#555" strokeWidth="1" />
+                <text x="154" y="25" fill="#888" fontSize="7" textAnchor="middle">MIDI</text>
+                
+                <rect x="220" y="14" width="32" height="16" rx="2" fill="#333" stroke="#555" strokeWidth="1" />
+                <text x="236" y="25" fill="#888" fontSize="7" textAnchor="middle">USB</text>
+                
+                <rect x="258" y="14" width="46" height="16" rx="2" fill="#333" stroke="#555" strokeWidth="1" />
+                <text x="281" y="25" fill="#888" fontSize="7" textAnchor="middle">POWER</text>
+              </g>
+              
+              {/* Display area */}
+              <g onClick={() => handleClick('display')} className={partStyle('display')}>
+                <text x="24" y="55" fill="#fff" fontSize="18" fontWeight="bold" fontFamily="monospace">K.O. II</text>
+                <text x="24" y="70" fill="#E85D04" fontSize="10" fontFamily="sans-serif">サンプラー</text>
+                <text x="24" y="90" fill="#666" fontSize="8">○ 64 MB SAMPLER COMPOSER</text>
+              </g>
+              
+              {/* Speaker grille */}
+              <g onClick={() => handleClick('speaker')} className={partStyle('speaker')}>
+                <rect x="180" y="40" width="120" height="60" rx="4" fill="#222" />
+                {[...Array(8)].map((_, row) => (
+                  [...Array(15)].map((_, col) => (
+                    <circle key={`${row}-${col}`} cx={188 + col * 8} cy={48 + row * 7} r="2" fill="#333" />
+                  ))
+                ))}
+              </g>
+              
+              {/* Main control section - lighter gray */}
+              <rect x="8" y="116" width="304" height="310" rx="6" fill="#E0E0E0" />
+              
+              {/* Volume knob */}
+              <g onClick={() => handleClick('volume')} className={partStyle('volume')}>
+                <text x="16" y="128" fill="#666" fontSize="6">VOLUME</text>
+                <circle cx="34" cy="152" r="14" fill="#444" />
+                <circle cx="34" cy="152" r="10" fill="#333" />
+                <line x1="34" y1="140" x2="34" y2="146" stroke="#888" strokeWidth="2" />
+              </g>
+              
+              {/* Top row buttons: SOUND, MAIN, TEMPO */}
+              <g onClick={() => handleClick('soundBtn')} className={partStyle('soundBtn')}>
+                <rect x="58" y="128" width="44" height="28" rx="3" fill="#888" />
+                <text x="80" y="142" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">SOUND</text>
+                <text x="80" y="152" fill="#E85D04" fontSize="6" textAnchor="middle">EDIT</text>
+              </g>
+              
+              <g onClick={() => handleClick('mainBtn')} className={partStyle('mainBtn')}>
+                <rect x="106" y="128" width="44" height="28" rx="3" fill="#888" />
+                <text x="128" y="142" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">MAIN</text>
+                <rect x="112" y="147" width="32" height="8" rx="2" fill="#E85D04" />
+                <text x="128" y="154" fill="#fff" fontSize="5" fontWeight="bold" textAnchor="middle">COMMIT</text>
+              </g>
+              
+              <g onClick={() => handleClick('tempoBtn')} className={partStyle('tempoBtn')}>
+                <rect x="154" y="128" width="44" height="28" rx="3" fill="#888" />
+                <text x="176" y="142" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">TEMPO</text>
+                <text x="176" y="152" fill="#E85D04" fontSize="6" textAnchor="middle">LOOP</text>
+              </g>
+              
+              {/* LEVEL PITCH TIME labels */}
+              <g onClick={() => handleClick('levelPitchTime')} className={partStyle('levelPitchTime')}>
+                <text x="64" y="168" fill="#666" fontSize="5">○ LEVEL</text>
+                <text x="112" y="168" fill="#666" fontSize="5">○ PITCH</text>
+                <text x="160" y="168" fill="#666" fontSize="5">○ TIME</text>
+              </g>
+              
+              {/* BPM label and METRONOME label */}
+              <g onClick={() => handleClick('bpmDial')} className={partStyle('bpmDial')}>
+                <text x="224" y="124" fill="#666" fontSize="6">BPM</text>
+                <text x="278" y="124" fill="#666" fontSize="6">METRONOME</text>
+              </g>
+              
+              {/* X dial (red/orange) with GAIN label */}
+              <g onClick={() => handleClick('swingGain')} className={partStyle('swingGain')}>
+                {/* GAIN label on left */}
+                <text x="218" y="155" fill="#666" fontSize="6" transform="rotate(-90, 218, 155)">GAIN</text>
+                
+                {/* X dial - large red encoder */}
+                <circle cx="248" cy="155" r="20" fill="#444" />
+                <circle cx="248" cy="155" r="17" fill="#DC2626" />
+                <circle cx="248" cy="155" r="8" fill="#333" />
+                <text x="248" y="178" fill="#666" fontSize="7" textAnchor="middle">X</text>
+                
+                {/* Y dial - black knob */}
+                <circle cx="288" cy="155" r="14" fill="#444" />
+                <circle cx="288" cy="155" r="11" fill="#222" />
+                <text x="288" y="178" fill="#666" fontSize="7" textAnchor="middle">Y</text>
+                
+                {/* SWING label on right */}
+                <text x="306" y="155" fill="#666" fontSize="6" transform="rotate(90, 306, 155)">SWING</text>
+              </g>
+              
+              {/* KEYS button */}
+              <g onClick={() => handleClick('keys')} className={partStyle('keys')}>
+                <rect x="16" y="192" width="36" height="20" rx="3" fill="#888" />
+                <text x="34" y="206" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">KEYS</text>
+              </g>
+              
+              {/* FADER button and slider */}
+              <g onClick={() => handleClick('fader')} className={partStyle('fader')}>
+                <rect x="16" y="218" width="36" height="20" rx="3" fill="#888" />
+                <text x="34" y="232" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">FADER</text>
+                {/* Actual fader track */}
+                <rect x="20" y="248" width="8" height="130" rx="2" fill="#444" />
+                <rect x="17" y="310" width="14" height="24" rx="2" fill="#666" stroke="#555" strokeWidth="1" />
+              </g>
+              
+              {/* SHIFT button */}
+              <g onClick={() => handleClick('shift')} className={partStyle('shift')}>
+                <rect x="16" y="392" width="36" height="20" rx="3" fill="#888" />
+                <text x="34" y="406" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">SHIFT</text>
+              </g>
+              
+              {/* Group buttons A B C D */}
+              <g onClick={() => handleClick('groups')} className={partStyle('groups')}>
+                {['A', 'B', 'C', 'D'].map((g, i) => (
+                  <g key={g}>
+                    <rect x="58" y={192 + i * 52} width="28" height="36" rx="3" fill="#888" />
+                    <text x="72" y={213 + i * 52} fill="#333" fontSize="13" fontWeight="bold" textAnchor="middle">{g}</text>
+                    <text x="72" y={223 + i * 52} fill="#555" fontSize="5" textAnchor="middle">{i === 0 ? '▸' : i === 1 ? '◆' : i === 2 ? '★' : '●'}</text>
+                  </g>
+                ))}
+              </g>
+              
+              {/* Number pad grid - 4 columns, 4 rows */}
+              <g onClick={() => handleClick('pads')} className={partStyle('pads')}>
+                {/* Row 1: 7, 8, 9, • */}
+                {[7, 8, 9, '•'].map((n, i) => (
+                  <g key={`row1-${i}`}>
+                    <rect x={92 + i * 33} y="192" width="30" height="36" rx="3" fill="#444" />
+                    <text x={107 + i * 33} y="214" fill="#fff" fontSize="14" fontWeight="bold" textAnchor="middle">{n}</text>
+                  </g>
+                ))}
+              </g>
+              
+              {/* LED indicators - Row 1: LPF, HPF, >FX - individually clickable */}
+              <g onClick={() => handleClick('pad7_lpf')} className={partStyle('pad7_lpf')}>
+                <circle cx="96" cy="232" r="3" fill="#666" />
+                <text x="110" y="235" fill="#666" fontSize="6">LPF</text>
+              </g>
+              
+              <g onClick={() => handleClick('pad8_hpf')} className={partStyle('pad8_hpf')}>
+                <circle cx="129" cy="232" r="3" fill="#666" />
+                <text x="143" y="235" fill="#666" fontSize="6">HPF</text>
+              </g>
+              
+              <g onClick={() => handleClick('pad9_fx')} className={partStyle('pad9_fx')}>
+                <circle cx="162" cy="232" r="3" fill="#666" />
+                <text x="176" y="235" fill="#666" fontSize="6">{'>'}FX</text>
+              </g>
+              
+              {/* Row 2: 4, 5, 6, blank */}
+              <g onClick={() => handleClick('pads')} className={partStyle('pads')}>
+                {[4, 5, 6, ''].map((n, i) => (
+                  <g key={`row2-${i}`}>
+                    <rect x={92 + i * 33} y="244" width="30" height="36" rx="3" fill="#444" />
+                    <text x={107 + i * 33} y="266" fill="#fff" fontSize="14" fontWeight="bold" textAnchor="middle">{n}</text>
+                  </g>
+                ))}
+              </g>
+              
+              {/* LED indicators - Row 2: ATK, REL, PAN - individually clickable */}
+              <g onClick={() => handleClick('pad4_atk')} className={partStyle('pad4_atk')}>
+                <circle cx="96" cy="284" r="3" fill="#E85D04" />
+                <text x="110" y="287" fill="#666" fontSize="6">ATK</text>
+              </g>
+              
+              <g onClick={() => handleClick('pad5_rel')} className={partStyle('pad5_rel')}>
+                <circle cx="129" cy="284" r="3" fill="#E85D04" />
+                <text x="143" y="287" fill="#666" fontSize="6">REL</text>
+              </g>
+              
+              <g onClick={() => handleClick('pad6_pan')} className={partStyle('pad6_pan')}>
+                <circle cx="162" cy="284" r="3" fill="#666" />
+                <text x="176" y="287" fill="#666" fontSize="6">PAN</text>
+              </g>
+              
+              {/* Row 3: 1, 2, 3, blank */}
+              <g onClick={() => handleClick('pads')} className={partStyle('pads')}>
+                {[1, 2, 3, ''].map((n, i) => (
+                  <g key={`row3-${i}`}>
+                    <rect x={92 + i * 33} y="296" width="30" height="36" rx="3" fill="#444" />
+                    <text x={107 + i * 33} y="318" fill="#fff" fontSize="14" fontWeight="bold" textAnchor="middle">{n}</text>
+                  </g>
+                ))}
+              </g>
+              
+              {/* LED indicators - Row 3: TUNE, VEL, MOD - individually clickable */}
+              <g onClick={() => handleClick('pad1_tune')} className={partStyle('pad1_tune')}>
+                <circle cx="96" cy="336" r="3" fill="#E85D04" />
+                <text x="110" y="339" fill="#666" fontSize="6">TUNE</text>
+              </g>
+              
+              <g onClick={() => handleClick('pad2_vel')} className={partStyle('pad2_vel')}>
+                <circle cx="129" cy="336" r="3" fill="#E85D04" />
+                <text x="143" y="339" fill="#666" fontSize="6">VEL</text>
+              </g>
+              
+              <g onClick={() => handleClick('pad3_mod')} className={partStyle('pad3_mod')}>
+                <circle cx="162" cy="336" r="3" fill="#666" />
+                <text x="176" y="339" fill="#666" fontSize="6">MOD</text>
+              </g>
+              
+              {/* Row 4: •, 0, ENTER */}
+              <g onClick={() => handleClick('pads')} className={partStyle('pads')}>
+                <rect x="92" y="348" width="30" height="36" rx="3" fill="#444" />
+                <text x="107" y="370" fill="#fff" fontSize="14" fontWeight="bold" textAnchor="middle">•</text>
+                
+                <rect x="125" y="348" width="30" height="36" rx="3" fill="#444" />
+                <text x="140" y="370" fill="#fff" fontSize="14" fontWeight="bold" textAnchor="middle">0</text>
+                
+                <rect x="158" y="348" width="30" height="36" rx="3" fill="#444" />
+                <text x="173" y="366" fill="#fff" fontSize="8" fontWeight="bold" textAnchor="middle">ENTER</text>
+              </g>
+              
+              {/* Bottom LED indicators (below row 4) - decorative */}
+              <circle cx="96" cy="388" r="3" fill="#666" />
+              <circle cx="129" cy="388" r="3" fill="#666" />
+              
+              {/* Right side button grid - 2x2 layout with stacked pairs */}
+              
+              {/* SAMPLE/CHOP - left column top */}
+              <g onClick={() => handleClick('sampleChop')} className={partStyle('sampleChop')}>
+                {/* SAMPLE button (orange) */}
+                <rect x="228" y="192" width="34" height="28" rx="3" fill="#E85D04" />
+                <text x="245" y="210" fill="#fff" fontSize="7" fontWeight="bold" textAnchor="middle">SAMPLE</text>
+                {/* CHOP button below */}
+                <rect x="228" y="224" width="34" height="22" rx="3" fill="#888" />
+                <text x="245" y="238" fill="#333" fontSize="6" fontWeight="bold" textAnchor="middle">CHOP</text>
+              </g>
+              
+              {/* TIMING/CORRECT - right column top */}
+              <g onClick={() => handleClick('timingCorrect')} className={partStyle('timingCorrect')}>
+                {/* TIMING button */}
+                <rect x="268" y="192" width="38" height="28" rx="3" fill="#888" />
+                <text x="287" y="210" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">TIMING</text>
+                {/* CORRECT button below */}
+                <rect x="268" y="224" width="38" height="22" rx="3" fill="#888" />
+                <text x="287" y="238" fill="#333" fontSize="6" fontWeight="bold" textAnchor="middle">CORRECT</text>
+              </g>
+              
+              {/* FX/OUTPUT - left column middle */}
+              <g onClick={() => handleClick('fxOutput')} className={partStyle('fxOutput')}>
+                {/* FX button */}
+                <rect x="228" y="260" width="34" height="28" rx="3" fill="#888" />
+                <text x="245" y="278" fill="#333" fontSize="9" fontWeight="bold" textAnchor="middle">FX</text>
+                {/* OUTPUT button below */}
+                <rect x="228" y="292" width="34" height="22" rx="3" fill="#888" />
+                <text x="245" y="306" fill="#333" fontSize="6" fontWeight="bold" textAnchor="middle">OUTPUT</text>
+              </g>
+              
+              {/* ERASE/SYSTEM - right column middle */}
+              <g onClick={() => handleClick('eraseSystem')} className={partStyle('eraseSystem')}>
+                {/* ERASE button */}
+                <rect x="268" y="260" width="38" height="28" rx="3" fill="#888" />
+                <text x="287" y="278" fill="#333" fontSize="7" fontWeight="bold" textAnchor="middle">ERASE</text>
+                {/* SYSTEM button below */}
+                <rect x="268" y="292" width="38" height="22" rx="3" fill="#888" />
+                <text x="287" y="306" fill="#333" fontSize="6" fontWeight="bold" textAnchor="middle">SYSTEM</text>
+              </g>
+              
+              {/* - and + buttons */}
+              <g onClick={() => handleClick('plusMinus')} className={partStyle('plusMinus')}>
+                <rect x="228" y="328" width="36" height="36" rx="3" fill="#888" />
+                <text x="246" y="352" fill="#333" fontSize="20" fontWeight="bold" textAnchor="middle">−</text>
+                <rect x="270" y="328" width="36" height="36" rx="3" fill="#888" />
+                <text x="288" y="352" fill="#333" fontSize="20" fontWeight="bold" textAnchor="middle">+</text>
+              </g>
+              
+              {/* RECORD button */}
+              <g onClick={() => handleClick('record')} className={partStyle('record')}>
+                <rect x="228" y="378" width="36" height="36" rx="4" fill="#DC2626" />
+                <text x="246" y="400" fill="#fff" fontSize="7" fontWeight="bold" textAnchor="middle">RECORD</text>
+              </g>
+              
+              {/* PLAY button */}
+              <g onClick={() => handleClick('play')} className={partStyle('play')}>
+                <rect x="270" y="378" width="36" height="36" rx="4" fill="#888" />
+                <polygon points="280,388 280,404 294,396" fill="#333" />
+                <text x="288" y="412" fill="#333" fontSize="6" fontWeight="bold" textAnchor="middle">PLAY</text>
+              </g>
+            </svg>
+          </div>
+        );
+      };
+
+      if (!loaded) return (
+        <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
+          <div className="text-orange-500 font-mono animate-pulse">LOADING...</div>
+        </div>
+      );
+
+      return (
+        <div className="min-h-screen bg-neutral-900 text-neutral-100" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
+          {/* Header */}
+          <header className="bg-neutral-800 border-b-2 border-orange-500">
+            <div className="max-w-4xl mx-auto px-4 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-xl md:text-2xl font-bold tracking-tight">
+                    <span className="text-orange-500">K.O. II</span> EP–133
+                  </h1>
+                  <p className="text-neutral-500 text-xs mt-0.5">64 MB SAMPLER COMPOSER — GUIDE FOR DAD</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-neutral-500">PROGRESS</div>
+                  <div className="text-xl font-bold text-orange-500">{completedCount}/{lessons.length}</div>
+                </div>
+              </div>
+              <div className="mt-3 h-1.5 bg-neutral-700 rounded-full overflow-hidden">
+                <div className="h-full bg-orange-500 transition-all duration-500" style={{ width: `${(completedCount / lessons.length) * 100}%` }} />
+              </div>
+            </div>
+          </header>
+
+          {/* Navigation */}
+          <nav className="sticky top-0 z-50 bg-neutral-800/95 backdrop-blur border-b border-neutral-700">
+            <div className="max-w-4xl mx-auto px-4 flex gap-1 overflow-x-auto py-2">
+              {[
+                { id: 'home', label: 'START' },
+                { id: 'device', label: 'DEVICE' },
+                { id: 'lessons', label: 'LESSONS' },
+                { id: 'practice', label: 'PRACTICE' },
+                { id: 'help', label: 'HELP' }
+              ].map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`px-4 py-2 text-sm font-medium rounded transition-all
+                    ${activeTab === t.id ? 'bg-orange-500 text-white' : 'text-neutral-400 hover:text-orange-400 hover:bg-neutral-700'}`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </nav>
+
+          <main className="max-w-4xl mx-auto px-4 py-6">
+            {/* HOME */}
+            {activeTab === 'home' && (
+              <div className="space-y-6">
+                <div className="p-6 rounded-xl bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700">
+                  <h2 className="text-2xl font-bold mb-3">Hey Dad! 👋</h2>
+                  <p className="text-neutral-300 leading-relaxed mb-3">
+                    This machine is <span className="text-orange-400 font-semibold">way simpler</span> than that Tascam. Think of it as a drum machine + bass player + keyboard that never gets tired. Make beats, jam along with your guitar.
+                  </p>
+                  <p className="text-neutral-500 text-sm">Your progress saves automatically.</p>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {[
+                    { tab: 'device', title: 'Know Your Device', desc: 'Interactive diagram—tap any part' },
+                    { tab: 'lessons', title: 'Step-by-Step Lessons', desc: '12 lessons to jamming' },
+                    { tab: 'practice', title: 'Practice Mode', desc: 'Guided first beat' },
+                    { tab: 'help', title: 'Troubleshooting', desc: 'Quick fixes' }
+                  ].map(c => (
+                    <button
+                      key={c.tab}
+                      onClick={() => { setActiveTab(c.tab); if (c.tab === 'practice') setPracticeMode(true); }}
+                      className="p-5 rounded-lg bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 hover:border-orange-500/50 transition-all text-left"
+                    >
+                      <h3 className="font-bold mb-1">{c.title}</h3>
+                      <p className="text-neutral-500 text-sm">{c.desc}</p>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="p-5 rounded-lg bg-neutral-800 border border-neutral-700">
+                  <h3 className="font-bold text-orange-400 mb-3">📍 THE BIG IDEA</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-center text-sm">
+                    {[
+                      { t: 'PROJECT', d: 'A song (slots 1-9)' },
+                      { t: 'GROUP', d: 'Instrument kit (A/B/C/D)' },
+                      { t: 'PATTERN', d: 'A loop (99 per group)' },
+                      { t: 'SCENE', d: 'Snapshot of 4 patterns' }
+                    ].map(x => (
+                      <div key={x.t} className="p-3 rounded bg-neutral-700">
+                        <div className="text-orange-400 font-bold">{x.t}</div>
+                        <div className="text-neutral-400 text-xs mt-1">{x.d}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* DEVICE */}
+            {activeTab === 'device' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold">Interactive Device Map</h2>
+                  <button
+                    onClick={() => setShowCheatsheet(!showCheatsheet)}
+                    className={`px-3 py-1 rounded text-sm ${showCheatsheet ? 'bg-orange-500 text-white' : 'bg-neutral-700 text-neutral-300'}`}
+                  >
+                    {showCheatsheet ? 'HIDE' : 'CHEATSHEET'}
+                  </button>
+                </div>
+
+                {showCheatsheet && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                    {cheatsheet.map(c => (
+                      <div key={c.cat} className="p-3 rounded bg-neutral-800 border border-neutral-700">
+                        <div className="text-orange-400 font-bold mb-1">{c.cat}</div>
+                        {c.cmds.map((cmd, i) => <div key={i} className="text-neutral-400">{cmd}</div>)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <p className="text-neutral-500 text-sm">Tap any part of the device to learn about it.</p>
+                
+                <DeviceMap />
+
+                {selectedPart && parts[selectedPart] ? (
+                  <div className="p-5 rounded-lg bg-neutral-800 border-l-4 border-orange-500 animate-fadeIn">
+                    <h3 className="text-lg font-bold text-orange-400 mb-2">{parts[selectedPart].name}</h3>
+                    <p className="text-neutral-300 mb-3">{parts[selectedPart].desc}</p>
+                    <div className="p-3 rounded bg-neutral-700 text-sm">
+                      <span className="text-orange-400 font-semibold">🎸 Guitar Analogy: </span>
+                      <span className="text-neutral-300">{parts[selectedPart].guitar}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-5 rounded-lg bg-neutral-800 text-center text-neutral-500 border border-neutral-700">
+                    👆 Tap any button, pad, or control above
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* LESSONS */}
+            {activeTab === 'lessons' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold">Lessons</h2>
+                  <span className="text-neutral-500 text-sm">{completedCount}/{lessons.length}</span>
+                </div>
+
+                {lessons.map((lesson, idx) => {
+                  const isExpanded = expandedLesson === lesson.id;
+                  const isInteractive = interactiveMode && expandedLesson === lesson.id;
+                  const currentStepData = isInteractive ? parseStepForButtons(lesson.steps[interactiveStep] || '') : { buttons: [], pulseCount: 1 };
+                  
+                  // Multi-tap animation handler
+                  const runTapAnimation = (pulseCount) => {
+                    if (pulseCount <= 1) return;
+                    let count = 0;
+                    const interval = setInterval(() => {
+                      setIsTapping(true);
+                      setTapCount(c => c + 1);
+                      setTimeout(() => setIsTapping(false), 300 / animationSpeed);
+                      count++;
+                      if (count >= pulseCount) {
+                        clearInterval(interval);
+                      }
+                    }, 600 / animationSpeed);
+                  };
+                  
+                  const handleNextStep = () => {
+                    if (interactiveStep < lesson.steps.length - 1) {
+                      const nextStep = interactiveStep + 1;
+                      setInteractiveStep(nextStep);
+                      const nextStepData = parseStepForButtons(lesson.steps[nextStep] || '');
+                      if (nextStepData.pulseCount > 1) {
+                        setTimeout(() => runTapAnimation(nextStepData.pulseCount), 200);
+                      }
+                    } else {
+                      // End of lesson
+                      setInteractiveMode(false);
+                      setInteractiveStep(0);
+                    }
+                  };
+                  
+                  const handlePrevStep = () => {
+                    if (interactiveStep > 0) {
+                      setInteractiveStep(interactiveStep - 1);
+                    }
+                  };
+                  
+                  const startInteractiveMode = () => {
+                    setInteractiveMode(true);
+                    setInteractiveStep(0);
+                    setIsAutoPlaying(false);
+                    if (autoPlayInterval) {
+                      clearInterval(autoPlayInterval);
+                      setAutoPlayInterval(null);
+                    }
+                    const firstStepData = parseStepForButtons(lesson.steps[0] || '');
+                    if (firstStepData.pulseCount > 1) {
+                      setTimeout(() => runTapAnimation(firstStepData.pulseCount), 500);
+                    }
+                  };
+                  
+                  const exitInteractiveMode = () => {
+                    setInteractiveMode(false);
+                    setInteractiveStep(0);
+                    setIsAutoPlaying(false);
+                    if (autoPlayInterval) {
+                      clearInterval(autoPlayInterval);
+                      setAutoPlayInterval(null);
+                    }
+                  };
+                  
+                  // Auto-play loop functionality
+                  const toggleAutoPlay = () => {
+                    if (isAutoPlaying) {
+                      // Stop auto-play
+                      if (autoPlayInterval) {
+                        clearInterval(autoPlayInterval);
+                        setAutoPlayInterval(null);
+                      }
+                      setIsAutoPlaying(false);
+                    } else {
+                      // Start auto-play
+                      setIsAutoPlaying(true);
+                      const baseDelay = 3000; // 3 seconds base
+                      const delay = baseDelay / animationSpeed;
+                      
+                      const interval = setInterval(() => {
+                        setInteractiveStep(prev => {
+                          const nextStep = prev >= lesson.steps.length - 1 ? 0 : prev + 1;
+                          // Run tap animation for multi-tap steps
+                          const stepData = parseStepForButtons(lesson.steps[nextStep] || '');
+                          if (stepData.pulseCount > 1) {
+                            setTimeout(() => runTapAnimation(stepData.pulseCount), 200);
+                          }
+                          return nextStep;
+                        });
+                      }, delay);
+                      
+                      setAutoPlayInterval(interval);
+                    }
+                  };
+                  
+                  // Update interval when speed changes during auto-play
+                  const handleSpeedChange = (newSpeed) => {
+                    setAnimationSpeed(newSpeed);
+                    if (isAutoPlaying && autoPlayInterval) {
+                      clearInterval(autoPlayInterval);
+                      const baseDelay = 3000;
+                      const delay = baseDelay / newSpeed;
+                      
+                      const interval = setInterval(() => {
+                        setInteractiveStep(prev => {
+                          const nextStep = prev >= lesson.steps.length - 1 ? 0 : prev + 1;
+                          const stepData = parseStepForButtons(lesson.steps[nextStep] || '');
+                          if (stepData.pulseCount > 1) {
+                            setTimeout(() => runTapAnimation(stepData.pulseCount), 200);
+                          }
+                          return nextStep;
+                        });
+                      }, delay);
+                      
+                      setAutoPlayInterval(interval);
+                    }
+                  };
+                  
+                  // Interactive mode content (shared between inline and modal)
+                  const InteractiveContent = () => (
+                    <div className="flex flex-col items-center gap-4">
+                      {/* Device with highlights */}
+                      <InteractiveDevice 
+                        highlightedButtons={currentStepData.buttons}
+                        isTapping={isTapping}
+                      />
+                      
+                      {/* Current step instruction */}
+                      <div className="w-full p-4 rounded-lg bg-neutral-800 border border-orange-500/50">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-neutral-500">STEP {interactiveStep + 1} / {lesson.steps.length}</span>
+                          <div className="flex items-center gap-2">
+                            {currentStepData.pulseCount > 1 && (
+                              <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded">
+                                TAP ×{currentStepData.pulseCount}
+                              </span>
+                            )}
+                            {isAutoPlaying && (
+                              <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
+                                LOOPING
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-neutral-200 font-medium">{lesson.steps[interactiveStep]}</p>
+                      </div>
+                      
+                      {/* Auto-play and Speed controls */}
+                      <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+                        {/* Loop Play/Pause Button */}
+                        <button
+                          onClick={toggleAutoPlay}
+                          className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all ${
+                            isAutoPlaying 
+                              ? 'bg-green-500 text-white hover:bg-green-400' 
+                              : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
+                          }`}
+                        >
+                          {isAutoPlaying ? (
+                            <>
+                              <span className="text-lg">⏸</span> PAUSE LOOP
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-lg">🔄</span> AUTO LOOP
+                            </>
+                          )}
+                        </button>
+                        
+                        {/* Speed control */}
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-neutral-500">Speed:</span>
+                          {[0.5, 1, 1.5, 2].map(speed => (
+                            <button
+                              key={speed}
+                              onClick={() => handleSpeedChange(speed)}
+                              className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                                animationSpeed === speed 
+                                  ? 'bg-orange-500 text-white' 
+                                  : 'bg-neutral-700 text-neutral-400 hover:bg-neutral-600'
+                              }`}
+                            >
+                              {speed === 0.5 ? '0.5×' : speed === 1 ? '1×' : speed === 1.5 ? '1.5×' : '2×'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Manual Navigation buttons */}
+                      <div className="flex items-center gap-3 w-full">
+                        <button
+                          onClick={() => { if (isAutoPlaying) toggleAutoPlay(); handlePrevStep(); }}
+                          disabled={interactiveStep === 0 && !isAutoPlaying}
+                          className="flex-1 py-2 rounded font-medium text-sm bg-neutral-700 text-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-600 transition-all"
+                        >
+                          ← PREV
+                        </button>
+                        <button
+                          onClick={() => { if (isAutoPlaying) toggleAutoPlay(); handleNextStep(); }}
+                          className="flex-1 py-2 rounded font-medium text-sm bg-orange-500 text-white hover:bg-orange-400 transition-all"
+                        >
+                          {interactiveStep === lesson.steps.length - 1 ? 'FINISH ✓' : 'NEXT →'}
+                        </button>
+                      </div>
+                      
+                      {/* Progress dots */}
+                      <div className="flex gap-1.5 flex-wrap justify-center">
+                        {lesson.steps.map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => { if (isAutoPlaying) toggleAutoPlay(); setInteractiveStep(i); }}
+                            className={`w-2.5 h-2.5 rounded-full transition-all ${
+                              i === interactiveStep 
+                                ? 'bg-orange-500 scale-125' 
+                                : i < interactiveStep 
+                                  ? 'bg-green-500' 
+                                  : 'bg-neutral-600 hover:bg-neutral-500'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                  
+                  return (
+                    <div key={lesson.id} className={`rounded-lg overflow-hidden border ${completedLessons[lesson.id] ? 'border-green-500/50 bg-green-900/10' : 'border-neutral-700 bg-neutral-800'}`}>
+                      <button
+                        onClick={() => {
+                          if (expandedLesson === lesson.id) {
+                            setExpandedLesson(null);
+                            setInteractiveMode(false);
+                            setInteractiveStep(0);
+                          } else {
+                            setExpandedLesson(lesson.id);
+                            setInteractiveMode(false);
+                            setInteractiveStep(0);
+                          }
+                        }}
+                        className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-neutral-700/50"
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${completedLessons[lesson.id] ? 'bg-green-500 text-neutral-900' : 'bg-neutral-700 text-neutral-400'}`}>
+                          {completedLessons[lesson.id] ? '✓' : idx + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate text-sm">{lesson.title}</div>
+                          <div className="text-neutral-500 text-xs">{lesson.time}</div>
+                        </div>
+                        <span className="text-neutral-600">{isExpanded ? '−' : '+'}</span>
+                      </button>
+
+                      {isExpanded && (
+                        <div className="px-4 pb-4 border-t border-neutral-700">
+                          {/* Interactive Mode Button */}
+                          <button
+                            onClick={isInteractive ? exitInteractiveMode : startInteractiveMode}
+                            className={`mt-3 w-full py-2.5 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all ${
+                              isInteractive 
+                                ? 'bg-orange-500/20 text-orange-400 border border-orange-500' 
+                                : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-400 hover:to-orange-500'
+                            }`}
+                          >
+                            {isInteractive ? (
+                              <>
+                                <span>✕</span> EXIT INTERACTIVE MODE
+                              </>
+                            ) : (
+                              <>
+                                <span>▶</span> START INTERACTIVE MODE
+                              </>
+                            )}
+                          </button>
+                          
+                          {/* Desktop: Inline Interactive + Steps side by side */}
+                          {isInteractive && !isMobile && (
+                            <div className="mt-4 grid md:grid-cols-2 gap-4">
+                              <InteractiveContent />
+                              <div className="space-y-3">
+                                <h4 className="font-bold text-sm text-neutral-400">ALL STEPS</h4>
+                                <ol className="space-y-2 text-sm max-h-[400px] overflow-y-auto pr-2">
+                                  {lesson.steps.map((step, i) => (
+                                    <li 
+                                      key={i} 
+                                      onClick={() => setInteractiveStep(i)}
+                                      className={`flex gap-2 p-2 rounded cursor-pointer transition-all ${
+                                        i === interactiveStep 
+                                          ? 'bg-orange-500/20 border border-orange-500/50' 
+                                          : i < interactiveStep 
+                                            ? 'bg-green-500/10 text-neutral-400' 
+                                            : 'hover:bg-neutral-700'
+                                      }`}
+                                    >
+                                      <span className={`font-bold ${i === interactiveStep ? 'text-orange-400' : i < interactiveStep ? 'text-green-500' : 'text-neutral-500'}`}>
+                                        {i < interactiveStep ? '✓' : i + 1 + '.'}
+                                      </span>
+                                      <span className={i === interactiveStep ? 'text-neutral-200' : 'text-neutral-400'}>{step}</span>
+                                    </li>
+                                  ))}
+                                </ol>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Mobile: Modal Overlay */}
+                          {isInteractive && isMobile && (
+                            <div className="fixed inset-0 z-50 bg-neutral-900/95 flex flex-col p-4 overflow-y-auto">
+                              <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-bold text-orange-400">{lesson.title}</h3>
+                                <button 
+                                  onClick={exitInteractiveMode}
+                                  className="p-2 rounded-full bg-neutral-800 text-neutral-400 hover:text-white"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                              <InteractiveContent />
+                            </div>
+                          )}
+                          
+                          {/* Regular lesson content (when not in interactive mode) */}
+                          {!isInteractive && (
+                            <>
+                              <ol className="mt-3 space-y-2 text-sm">
+                                {lesson.steps.map((step, i) => (
+                                  <li key={i} className="flex gap-2">
+                                    <span className="text-orange-400 font-bold">{i + 1}.</span>
+                                    <span className="text-neutral-300">{step}</span>
+                                  </li>
+                                ))}
+                              </ol>
+                              <div className="mt-4 p-3 rounded bg-neutral-700 text-sm border-l-2 border-orange-500">
+                                <span className="text-orange-400 font-semibold">💡 </span>
+                                <span className="text-neutral-300">{lesson.tip}</span>
+                              </div>
+                              <div className="mt-3 p-3 rounded bg-blue-900/20 border border-blue-500/30 text-sm">
+                                <span className="text-blue-400 font-semibold">✓ </span>
+                                <span className="text-neutral-300">{lesson.checkpoint}</span>
+                              </div>
+                            </>
+                          )}
+                          
+                          <button
+                            onClick={() => toggleComplete(lesson.id)}
+                            className={`mt-4 w-full py-2 rounded font-medium text-sm ${completedLessons[lesson.id] ? 'bg-neutral-700 text-neutral-400' : 'bg-orange-500 text-white'}`}
+                          >
+                            {completedLessons[lesson.id] ? 'MARK INCOMPLETE' : 'MARK COMPLETE ✓'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* PRACTICE */}
+            {activeTab === 'practice' && (() => {
+              // Enhanced practice steps with button mappings
+              const practiceButtonMap = {
+                0: ['power'], // Power on
+                1: ['volume'], // Volume
+                2: ['groupA'], // Group A
+                3: ['play'], // Play
+                4: ['record'], // Record
+                5: ['pad1'], // Pad 1
+                6: ['pad2'], // Pad 2
+                7: ['record'], // Record stop
+                8: [], // Listen
+                9: ['record', 'pad7'], // Hi-hats
+                10: ['groupC'], // Group C
+                11: [], // Guitar
+              };
+              
+              const currentPracticeButtons = practiceButtonMap[practiceStep] || [];
+              
+              // Auto-play for practice mode
+              const togglePracticeAutoPlay = () => {
+                if (isAutoPlaying) {
+                  if (autoPlayInterval) {
+                    clearInterval(autoPlayInterval);
+                    setAutoPlayInterval(null);
+                  }
+                  setIsAutoPlaying(false);
+                } else {
+                  setIsAutoPlaying(true);
+                  const baseDelay = 3000;
+                  const delay = baseDelay / animationSpeed;
+                  
+                  const interval = setInterval(() => {
+                    setPracticeStep(prev => {
+                      if (prev >= practiceSteps.length - 1) {
+                        return 0; // Loop back
+                      }
+                      return prev + 1;
+                    });
+                  }, delay);
+                  
+                  setAutoPlayInterval(interval);
+                }
+              };
+              
+              const handlePracticeSpeedChange = (newSpeed) => {
+                setAnimationSpeed(newSpeed);
+                if (isAutoPlaying && autoPlayInterval) {
+                  clearInterval(autoPlayInterval);
+                  const baseDelay = 3000;
+                  const delay = baseDelay / newSpeed;
+                  
+                  const interval = setInterval(() => {
+                    setPracticeStep(prev => {
+                      if (prev >= practiceSteps.length - 1) {
+                        return 0;
+                      }
+                      return prev + 1;
+                    });
+                  }, delay);
+                  
+                  setAutoPlayInterval(interval);
+                }
+              };
+              
+              return (
+                <div className="space-y-6">
+                  {!practiceMode ? (
+                    <div className="text-center py-12">
+                      <div className="text-5xl mb-4">🎹</div>
+                      <h3 className="text-xl font-bold mb-2">Ready to Make Your First Beat?</h3>
+                      <p className="text-neutral-400 mb-6">Step-by-step guidance with <span className="text-orange-400">interactive device highlighting</span>. Have your EP-133 ready.</p>
+                      <button onClick={() => { setPracticeMode(true); setPracticeStep(0); setIsAutoPlaying(false); }} className="px-6 py-3 bg-orange-500 text-white rounded-lg font-bold">
+                        START SESSION
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Progress dots */}
+                      <div className="flex gap-1 justify-center flex-wrap">
+                        {practiceSteps.map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => { if (isAutoPlaying) togglePracticeAutoPlay(); setPracticeStep(i); }}
+                            className={`w-2.5 h-2.5 rounded-full transition-all ${i < practiceStep ? 'bg-green-400' : i === practiceStep ? 'bg-orange-400 scale-125' : 'bg-neutral-700 hover:bg-neutral-600'}`}
+                          />
+                        ))}
+                      </div>
+
+                      {practiceStep < practiceSteps.length ? (
+                        <div className={`${isMobile ? 'flex flex-col' : 'grid md:grid-cols-2'} gap-6 items-start`}>
+                          {/* Interactive Device */}
+                          <div className="flex flex-col items-center gap-4">
+                            <InteractiveDevice 
+                              highlightedButtons={currentPracticeButtons}
+                              isTapping={false}
+                            />
+                            
+                            {/* Auto-play and Speed controls */}
+                            <div className="flex flex-col sm:flex-row items-center gap-3">
+                              {/* Loop Play/Pause Button */}
+                              <button
+                                onClick={togglePracticeAutoPlay}
+                                className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all ${
+                                  isAutoPlaying 
+                                    ? 'bg-green-500 text-white hover:bg-green-400' 
+                                    : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
+                                }`}
+                              >
+                                {isAutoPlaying ? (
+                                  <>
+                                    <span className="text-lg">⏸</span> PAUSE
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="text-lg">🔄</span> AUTO LOOP
+                                  </>
+                                )}
+                              </button>
+                              
+                              {/* Speed control */}
+                              <div className="flex items-center gap-2 text-sm">
+                                <span className="text-neutral-500">Speed:</span>
+                                {[0.5, 1, 1.5, 2].map(speed => (
+                                  <button
+                                    key={speed}
+                                    onClick={() => handlePracticeSpeedChange(speed)}
+                                    className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                                      animationSpeed === speed 
+                                        ? 'bg-orange-500 text-white' 
+                                        : 'bg-neutral-700 text-neutral-400 hover:bg-neutral-600'
+                                    }`}
+                                  >
+                                    {speed === 0.5 ? '0.5×' : speed === 1 ? '1×' : speed === 1.5 ? '1.5×' : '2×'}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Instructions and Controls */}
+                          <div className="flex flex-col items-center justify-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <div className="text-5xl">{practiceSteps[practiceStep].icon}</div>
+                              {isAutoPlaying && (
+                                <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
+                                  LOOPING
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-neutral-500">STEP {practiceStep + 1}/{practiceSteps.length}</div>
+                            <h3 className="text-xl font-bold text-orange-400 text-center">{practiceSteps[practiceStep].text}</h3>
+                            
+                            {currentPracticeButtons.length > 0 && (
+                              <div className="text-sm text-neutral-400 bg-neutral-800 px-3 py-1.5 rounded-full">
+                                👆 Watch the highlighted button{currentPracticeButtons.length > 1 ? 's' : ''}
+                              </div>
+                            )}
+                            
+                            <div className="flex gap-3 justify-center mt-4">
+                              <button 
+                                onClick={() => { if (isAutoPlaying) togglePracticeAutoPlay(); setPracticeStep(Math.max(0, practiceStep - 1)); }} 
+                                disabled={practiceStep === 0 && !isAutoPlaying} 
+                                className="px-5 py-2.5 bg-neutral-700 rounded font-medium disabled:opacity-30 hover:bg-neutral-600 transition-all"
+                              >
+                                ← BACK
+                              </button>
+                              <button 
+                                onClick={() => { if (isAutoPlaying) togglePracticeAutoPlay(); setPracticeStep(practiceStep + 1); }} 
+                                className="px-6 py-2.5 bg-orange-500 text-white rounded font-bold hover:bg-orange-400 transition-all"
+                              >
+                                DONE →
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-10">
+                          <div className="text-5xl mb-4">🎉</div>
+                          <h3 className="text-xl font-bold text-green-400 mb-2">You Did It!</h3>
+                          <p className="text-neutral-400 mb-6">Now jam with your guitar!</p>
+                          <div className="flex gap-3 justify-center">
+                            <button onClick={() => setPracticeStep(0)} className="px-5 py-2 bg-neutral-700 rounded font-medium hover:bg-neutral-600">AGAIN</button>
+                            <button onClick={() => { setPracticeMode(false); setActiveTab('lessons'); }} className="px-5 py-2 bg-orange-500 text-white rounded font-bold hover:bg-orange-400">LESSONS</button>
+                          </div>
+                        </div>
+                      )}
+                      <button onClick={() => { if (isAutoPlaying) togglePracticeAutoPlay(); setPracticeMode(false); }} className="w-full py-2 text-neutral-600 text-sm hover:text-neutral-400">Exit Practice Mode</button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* HELP */}
+            {activeTab === 'help' && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-bold">Troubleshooting</h2>
+                {troubleshooting.map((t, i) => (
+                  <div key={i} className="rounded-lg bg-neutral-800 border border-neutral-700 overflow-hidden">
+                    <button onClick={() => setExpandedTip(expandedTip === i ? null : i)} className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-neutral-700/50">
+                      <span className="font-medium text-red-400 text-sm">❓ {t.q}</span>
+                      <span className="text-neutral-600">{expandedTip === i ? '−' : '+'}</span>
+                    </button>
+                    {expandedTip === i && (
+                      <div className="px-4 pb-3 border-t border-neutral-700">
+                        <p className="pt-2 text-neutral-300 text-sm">{t.a}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <div className="mt-6 p-5 rounded-lg bg-neutral-800 border border-neutral-700">
+                  <h3 className="font-bold text-orange-400 mb-2">🛟 UNIVERSAL FIXES</h3>
+                  <ul className="text-neutral-300 text-sm space-y-1">
+                    <li>• Turn it off and on</li>
+                    <li>• Press MAIN to go home</li>
+                    <li>• SHIFT + ERASE = undo</li>
+                    <li>• Still stuck? Call Casey! 📞</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </main>
+
+          <footer className="border-t border-neutral-800 mt-8 py-4 text-center text-neutral-600 text-xs">
+            Made with ❤️ for Dad • <button onClick={async () => { if(confirm('Reset?')) { setCompletedLessons({}); try { await window.storage.delete('ep133-dad-v2'); } catch(e){} }}} className="underline">Reset</button>
+          </footer>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<EP133Guide />);
+  </script>
+</body>
+</html>
