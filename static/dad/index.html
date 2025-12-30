@@ -111,10 +111,25 @@
       const [autoPlayInterval, setAutoPlayInterval] = useState(null);
       const [voiceEnabled, setVoiceEnabled] = useState(false);
       const [currentAudio, setCurrentAudio] = useState(null);
+      const autoPlayingRef = React.useRef(false);
+      const voiceEnabledRef = React.useRef(false);
       
-      // Play audio for a lesson step
-      const playStepAudio = (lessonId, stepIndex) => {
-        if (!voiceEnabled) return;
+      // Keep refs in sync with state
+      React.useEffect(() => {
+        autoPlayingRef.current = isAutoPlaying;
+      }, [isAutoPlaying]);
+      
+      React.useEffect(() => {
+        voiceEnabledRef.current = voiceEnabled;
+      }, [voiceEnabled]);
+      
+      // Play audio for a lesson step, with optional callback when done
+      const playStepAudio = (lessonId, stepIndex, onEnded) => {
+        if (!voiceEnabledRef.current) {
+          // No audio, call callback immediately if provided
+          if (onEnded) onEnded();
+          return null;
+        }
         
         // Stop any currently playing audio
         if (currentAudio) {
@@ -124,8 +139,14 @@
         
         const audioPath = `/dad/audio/${lessonId}-${stepIndex}.mp3`;
         const audio = new Audio(audioPath);
+        
+        if (onEnded) {
+          audio.onended = onEnded;
+        }
+        
         audio.play().catch(e => console.log('Audio play failed:', e));
         setCurrentAudio(audio);
+        return audio;
       };
       
       // Stop current audio
@@ -145,11 +166,14 @@
         return () => window.removeEventListener('resize', checkMobile);
       }, []);
       
-      // Clean up auto-play interval when interactive mode closes
+      // Clean up when interactive mode closes
       useEffect(() => {
-        if (!interactiveMode && autoPlayInterval) {
-          clearInterval(autoPlayInterval);
-          setAutoPlayInterval(null);
+        if (!interactiveMode) {
+          // Stop any playing audio and reset auto-play state
+          if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+          }
           setIsAutoPlaying(false);
         }
       }, [interactiveMode]);
@@ -1494,10 +1518,6 @@
                     setInteractiveMode(true);
                     setInteractiveStep(0);
                     setIsAutoPlaying(false);
-                    if (autoPlayInterval) {
-                      clearInterval(autoPlayInterval);
-                      setAutoPlayInterval(null);
-                    }
                     // Play first step audio after a small delay
                     setTimeout(() => playStepAudio(lesson.id, 0), 300);
                     const firstStepData = parseStepForButtons(lesson.steps[0] || '');
@@ -1511,9 +1531,42 @@
                     setInteractiveMode(false);
                     setInteractiveStep(0);
                     setIsAutoPlaying(false);
-                    if (autoPlayInterval) {
-                      clearInterval(autoPlayInterval);
-                      setAutoPlayInterval(null);
+                  };
+                  
+                  // Advance to next step with optional audio callback chain
+                  const advanceStep = (currentStep) => {
+                    const nextStep = currentStep >= lesson.steps.length - 1 ? 0 : currentStep + 1;
+                    setInteractiveStep(nextStep);
+                    
+                    // Run tap animation for multi-tap steps
+                    const stepData = parseStepForButtons(lesson.steps[nextStep] || '');
+                    if (stepData.pulseCount > 1) {
+                      setTimeout(() => runTapAnimation(stepData.pulseCount), 200);
+                    }
+                    
+                    // If voice enabled, wait for audio to finish before next step
+                    // If voice disabled, use timer
+                    if (voiceEnabledRef.current) {
+                      playStepAudio(lesson.id, nextStep, () => {
+                        // Only continue if still auto-playing
+                        if (autoPlayingRef.current) {
+                          // Small pause after audio ends before next step
+                          setTimeout(() => {
+                            if (autoPlayingRef.current) {
+                              advanceStep(nextStep);
+                            }
+                          }, 500);
+                        }
+                      });
+                    } else {
+                      // No voice - use fixed timer
+                      const baseDelay = 3000;
+                      const delay = baseDelay / animationSpeed;
+                      setTimeout(() => {
+                        if (autoPlayingRef.current) {
+                          advanceStep(nextStep);
+                        }
+                      }, delay);
                     }
                   };
                   
@@ -1521,57 +1574,40 @@
                   const toggleAutoPlay = () => {
                     if (isAutoPlaying) {
                       // Stop auto-play
-                      if (autoPlayInterval) {
-                        clearInterval(autoPlayInterval);
-                        setAutoPlayInterval(null);
-                      }
+                      stopAudio();
                       setIsAutoPlaying(false);
                     } else {
                       // Start auto-play
                       setIsAutoPlaying(true);
-                      const baseDelay = 3000; // 3 seconds base
-                      const delay = baseDelay / animationSpeed;
                       
-                      const interval = setInterval(() => {
-                        setInteractiveStep(prev => {
-                          const nextStep = prev >= lesson.steps.length - 1 ? 0 : prev + 1;
-                          // Play audio for the new step
-                          playStepAudio(lesson.id, nextStep);
-                          // Run tap animation for multi-tap steps
-                          const stepData = parseStepForButtons(lesson.steps[nextStep] || '');
-                          if (stepData.pulseCount > 1) {
-                            setTimeout(() => runTapAnimation(stepData.pulseCount), 200);
+                      // Start the chain from current step
+                      if (voiceEnabled) {
+                        // Voice enabled - play current step audio, then chain
+                        playStepAudio(lesson.id, interactiveStep, () => {
+                          if (autoPlayingRef.current) {
+                            setTimeout(() => {
+                              if (autoPlayingRef.current) {
+                                advanceStep(interactiveStep);
+                              }
+                            }, 500);
                           }
-                          return nextStep;
                         });
-                      }, delay);
-                      
-                      setAutoPlayInterval(interval);
+                      } else {
+                        // No voice - start with fixed timer from current step
+                        const baseDelay = 3000;
+                        const delay = baseDelay / animationSpeed;
+                        setTimeout(() => {
+                          if (autoPlayingRef.current) {
+                            advanceStep(interactiveStep);
+                          }
+                        }, delay);
+                      }
                     }
                   };
                   
-                  // Update interval when speed changes during auto-play
+                  // Speed only affects non-voice playback
                   const handleSpeedChange = (newSpeed) => {
                     setAnimationSpeed(newSpeed);
-                    if (isAutoPlaying && autoPlayInterval) {
-                      clearInterval(autoPlayInterval);
-                      const baseDelay = 3000;
-                      const delay = baseDelay / newSpeed;
-                      
-                      const interval = setInterval(() => {
-                        setInteractiveStep(prev => {
-                          const nextStep = prev >= lesson.steps.length - 1 ? 0 : prev + 1;
-                          playStepAudio(lesson.id, nextStep);
-                          const stepData = parseStepForButtons(lesson.steps[nextStep] || '');
-                          if (stepData.pulseCount > 1) {
-                            setTimeout(() => runTapAnimation(stepData.pulseCount), 200);
-                          }
-                          return nextStep;
-                        });
-                      }, delay);
-                      
-                      setAutoPlayInterval(interval);
-                    }
                   };
                   
                   // Handle clicking on a progress dot
