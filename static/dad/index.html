@@ -1539,104 +1539,91 @@
                   
                   // Interactive mode content (shared between inline and modal)
                   const InteractiveContent = () => (
-                    <div className="flex flex-col items-center gap-4">
+                    <div className="flex flex-col items-center gap-2">
                       {/* Device with highlights */}
                       <InteractiveDevice 
                         highlightedButtons={currentStepData.buttons}
                         isTapping={isTapping}
                       />
                       
-                      {/* Current step instruction */}
-                      <div className="w-full p-4 rounded-lg bg-neutral-800 border border-orange-500/50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs text-neutral-500">STEP {interactiveStep + 1} / {lesson.steps.length}</span>
-                          <div className="flex items-center gap-2">
+                      {/* Current step instruction - compact */}
+                      <div className="w-full px-3 py-2 rounded-lg bg-neutral-800 border border-orange-500/50">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-neutral-500">STEP {interactiveStep + 1}/{lesson.steps.length}</span>
+                          <div className="flex items-center gap-1">
                             {currentStepData.pulseCount > 1 && (
-                              <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded">
-                                TAP ×{currentStepData.pulseCount}
+                              <span className="text-xs bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded">
+                                ×{currentStepData.pulseCount}
                               </span>
                             )}
                             {isAutoPlaying && (
-                              <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded flex items-center gap-1">
+                              <span className="text-xs bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded flex items-center gap-1">
                                 <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
-                                LOOPING
+                                LOOP
                               </span>
                             )}
                           </div>
                         </div>
-                        <p className="text-neutral-200 font-medium">{lesson.steps[interactiveStep]}</p>
+                        <p className="text-neutral-200 text-sm font-medium">{lesson.steps[interactiveStep]}</p>
                       </div>
                       
-                      {/* Auto-play and Speed controls */}
-                      <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
-                        {/* Loop Play/Pause Button */}
+                      {/* All controls in one row: [AUTO LOOP] [PREV] [NEXT] */}
+                      <div className="flex items-center gap-2 w-full">
                         <button
                           onClick={toggleAutoPlay}
-                          className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all ${
+                          className={`px-3 py-2 rounded-lg font-medium text-sm flex items-center gap-1 transition-all ${
                             isAutoPlaying 
-                              ? 'bg-green-500 text-white hover:bg-green-400' 
-                              : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
+                              ? 'bg-green-500 text-white' 
+                              : 'bg-neutral-700 text-neutral-300'
                           }`}
                         >
-                          {isAutoPlaying ? (
-                            <>
-                              <span className="text-lg">⏸</span> PAUSE LOOP
-                            </>
-                          ) : (
-                            <>
-                              <span className="text-lg">🔄</span> AUTO LOOP
-                            </>
-                          )}
+                          {isAutoPlaying ? '⏸' : '🔄'}
                         </button>
-                        
-                        {/* Speed control */}
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="text-neutral-500">Speed:</span>
-                          {[0.5, 1, 1.5, 2].map(speed => (
-                            <button
-                              key={speed}
-                              onClick={() => handleSpeedChange(speed)}
-                              className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                                animationSpeed === speed 
-                                  ? 'bg-orange-500 text-white' 
-                                  : 'bg-neutral-700 text-neutral-400 hover:bg-neutral-600'
-                              }`}
-                            >
-                              {speed === 0.5 ? '0.5×' : speed === 1 ? '1×' : speed === 1.5 ? '1.5×' : '2×'}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      {/* Manual Navigation buttons */}
-                      <div className="flex items-center gap-3 w-full">
                         <button
                           onClick={() => { if (isAutoPlaying) toggleAutoPlay(); handlePrevStep(); }}
                           disabled={interactiveStep === 0 && !isAutoPlaying}
-                          className="flex-1 py-2 rounded font-medium text-sm bg-neutral-700 text-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-600 transition-all"
+                          className="flex-1 py-2 rounded font-medium text-sm bg-neutral-700 text-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                         >
-                          ← PREV
+                          ←
                         </button>
                         <button
                           onClick={() => { if (isAutoPlaying) toggleAutoPlay(); handleNextStep(); }}
-                          className="flex-1 py-2 rounded font-medium text-sm bg-orange-500 text-white hover:bg-orange-400 transition-all"
+                          className="flex-1 py-2 rounded font-medium text-sm bg-orange-500 text-white transition-all"
                         >
-                          {interactiveStep === lesson.steps.length - 1 ? 'FINISH ✓' : 'NEXT →'}
+                          {interactiveStep === lesson.steps.length - 1 ? '✓' : '→'}
                         </button>
                       </div>
                       
-                      {/* Progress dots */}
-                      <div className="flex gap-1.5 flex-wrap justify-center">
+                      {/* Speed control - hidden on mobile, shown on desktop */}
+                      <div className="hidden sm:flex items-center gap-2 text-sm">
+                        <span className="text-neutral-500">Speed:</span>
+                        {[0.5, 1, 1.5, 2].map(speed => (
+                          <button
+                            key={speed}
+                            onClick={() => handleSpeedChange(speed)}
+                            className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                              animationSpeed === speed 
+                                ? 'bg-orange-500 text-white' 
+                                : 'bg-neutral-700 text-neutral-400'
+                            }`}
+                          >
+                            {speed}×
+                          </button>
+                        ))}
+                      </div>
+                      
+                      {/* Progress dots - compact */}
+                      <div className="flex gap-1 flex-wrap justify-center">
                         {lesson.steps.map((_, i) => (
                           <button
                             key={i}
                             onClick={() => { if (isAutoPlaying) toggleAutoPlay(); setInteractiveStep(i); }}
-                            className={`w-2.5 h-2.5 rounded-full transition-all ${
+                            className={`w-2 h-2 rounded-full transition-all ${
                               i === interactiveStep 
-                                ? 'bg-orange-500 scale-125' 
+                                ? 'bg-orange-500 scale-110' 
                                 : i < interactiveStep 
                                   ? 'bg-green-500' 
-                                  : 'bg-neutral-600 hover:bg-neutral-500'
+                                  : 'bg-neutral-600'
                             }`}
                           />
                         ))}
@@ -1724,12 +1711,12 @@
                           
                           {/* Mobile: Modal Overlay */}
                           {isInteractive && isMobile && (
-                            <div className="fixed inset-0 z-50 bg-neutral-900/95 flex flex-col p-4 overflow-y-auto">
-                              <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-bold text-orange-400">{lesson.title}</h3>
+                            <div className="fixed inset-0 z-50 bg-neutral-900 flex flex-col p-2 pt-1 overflow-y-auto">
+                              <div className="flex items-center justify-between mb-1">
+                                <h3 className="font-bold text-orange-400 text-sm">{lesson.title}</h3>
                                 <button 
                                   onClick={exitInteractiveMode}
-                                  className="p-2 rounded-full bg-neutral-800 text-neutral-400 hover:text-white"
+                                  className="p-1.5 rounded-full bg-neutral-800 text-neutral-400 hover:text-white text-sm"
                                 >
                                   ✕
                                 </button>
