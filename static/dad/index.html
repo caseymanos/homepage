@@ -109,6 +109,33 @@
       const [isMobile, setIsMobile] = useState(false);
       const [isAutoPlaying, setIsAutoPlaying] = useState(false);
       const [autoPlayInterval, setAutoPlayInterval] = useState(null);
+      const [voiceEnabled, setVoiceEnabled] = useState(false);
+      const [currentAudio, setCurrentAudio] = useState(null);
+      
+      // Play audio for a lesson step
+      const playStepAudio = (lessonId, stepIndex) => {
+        if (!voiceEnabled) return;
+        
+        // Stop any currently playing audio
+        if (currentAudio) {
+          currentAudio.pause();
+          currentAudio.currentTime = 0;
+        }
+        
+        const audioPath = `/dad/audio/${lessonId}-${stepIndex}.mp3`;
+        const audio = new Audio(audioPath);
+        audio.play().catch(e => console.log('Audio play failed:', e));
+        setCurrentAudio(audio);
+      };
+      
+      // Stop current audio
+      const stopAudio = () => {
+        if (currentAudio) {
+          currentAudio.pause();
+          currentAudio.currentTime = 0;
+          setCurrentAudio(null);
+        }
+      };
       
       // Check screen size for responsive layout
       useEffect(() => {
@@ -1442,12 +1469,14 @@
                     if (interactiveStep < lesson.steps.length - 1) {
                       const nextStep = interactiveStep + 1;
                       setInteractiveStep(nextStep);
+                      playStepAudio(lesson.id, nextStep);
                       const nextStepData = parseStepForButtons(lesson.steps[nextStep] || '');
                       if (nextStepData.pulseCount > 1) {
                         setTimeout(() => runTapAnimation(nextStepData.pulseCount), 200);
                       }
                     } else {
                       // End of lesson
+                      stopAudio();
                       setInteractiveMode(false);
                       setInteractiveStep(0);
                     }
@@ -1455,7 +1484,9 @@
                   
                   const handlePrevStep = () => {
                     if (interactiveStep > 0) {
-                      setInteractiveStep(interactiveStep - 1);
+                      const prevStep = interactiveStep - 1;
+                      setInteractiveStep(prevStep);
+                      playStepAudio(lesson.id, prevStep);
                     }
                   };
                   
@@ -1467,6 +1498,8 @@
                       clearInterval(autoPlayInterval);
                       setAutoPlayInterval(null);
                     }
+                    // Play first step audio after a small delay
+                    setTimeout(() => playStepAudio(lesson.id, 0), 300);
                     const firstStepData = parseStepForButtons(lesson.steps[0] || '');
                     if (firstStepData.pulseCount > 1) {
                       setTimeout(() => runTapAnimation(firstStepData.pulseCount), 500);
@@ -1474,6 +1507,7 @@
                   };
                   
                   const exitInteractiveMode = () => {
+                    stopAudio();
                     setInteractiveMode(false);
                     setInteractiveStep(0);
                     setIsAutoPlaying(false);
@@ -1501,6 +1535,8 @@
                       const interval = setInterval(() => {
                         setInteractiveStep(prev => {
                           const nextStep = prev >= lesson.steps.length - 1 ? 0 : prev + 1;
+                          // Play audio for the new step
+                          playStepAudio(lesson.id, nextStep);
                           // Run tap animation for multi-tap steps
                           const stepData = parseStepForButtons(lesson.steps[nextStep] || '');
                           if (stepData.pulseCount > 1) {
@@ -1525,6 +1561,7 @@
                       const interval = setInterval(() => {
                         setInteractiveStep(prev => {
                           const nextStep = prev >= lesson.steps.length - 1 ? 0 : prev + 1;
+                          playStepAudio(lesson.id, nextStep);
                           const stepData = parseStepForButtons(lesson.steps[nextStep] || '');
                           if (stepData.pulseCount > 1) {
                             setTimeout(() => runTapAnimation(stepData.pulseCount), 200);
@@ -1535,6 +1572,13 @@
                       
                       setAutoPlayInterval(interval);
                     }
+                  };
+                  
+                  // Handle clicking on a progress dot
+                  const handleDotClick = (stepIndex) => {
+                    if (isAutoPlaying) toggleAutoPlay();
+                    setInteractiveStep(stepIndex);
+                    playStepAudio(lesson.id, stepIndex);
                   };
                   
                   // Interactive mode content (shared between inline and modal)
@@ -1567,8 +1611,19 @@
                         <p className="text-neutral-200 text-sm font-medium">{lesson.steps[interactiveStep]}</p>
                       </div>
                       
-                      {/* All controls in one row: [AUTO LOOP] [PREV] [NEXT] */}
+                      {/* All controls in one row: [VOICE] [AUTO LOOP] [PREV] [NEXT] */}
                       <div className="flex items-center gap-2 w-full">
+                        <button
+                          onClick={() => setVoiceEnabled(!voiceEnabled)}
+                          className={`px-3 py-2 rounded-lg font-medium text-sm transition-all ${
+                            voiceEnabled 
+                              ? 'bg-blue-500 text-white' 
+                              : 'bg-neutral-700 text-neutral-300'
+                          }`}
+                          title={voiceEnabled ? 'Voice On' : 'Voice Off'}
+                        >
+                          {voiceEnabled ? '🔊' : '🔇'}
+                        </button>
                         <button
                           onClick={toggleAutoPlay}
                           className={`px-3 py-2 rounded-lg font-medium text-sm flex items-center gap-1 transition-all ${
@@ -1617,7 +1672,7 @@
                         {lesson.steps.map((_, i) => (
                           <button
                             key={i}
-                            onClick={() => { if (isAutoPlaying) toggleAutoPlay(); setInteractiveStep(i); }}
+                            onClick={() => handleDotClick(i)}
                             className={`w-2 h-2 rounded-full transition-all ${
                               i === interactiveStep 
                                 ? 'bg-orange-500 scale-110' 
