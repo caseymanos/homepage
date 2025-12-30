@@ -92,12 +92,21 @@
 		}
 	}
 
+	function handleCanvasClick(event: MouseEvent) {
+		// Only request pointer lock if clicking on empty space (not a sphere)
+		// Spheres will stop propagation, so if we get here, it's empty space
+		// Also check if pointer is already locked - if so, don't interfere
+		if (event.target === renderer.domElement && !isLocked) {
+			requestPointerLock();
+		}
+	}
+
 	onMount(() => {
 		document.addEventListener('pointerlockchange', onPointerLockChange);
 		document.addEventListener('mousemove', onMouseMove);
 		document.addEventListener('keydown', onKeyDown);
 		document.addEventListener('keyup', onKeyUp);
-		renderer.domElement.addEventListener('click', requestPointerLock);
+		renderer.domElement.addEventListener('click', handleCanvasClick);
 
 		// Apply initial camera rotation to look at planets
 		if (camera) {
@@ -110,7 +119,7 @@
 			document.removeEventListener('mousemove', onMouseMove);
 			document.removeEventListener('keydown', onKeyDown);
 			document.removeEventListener('keyup', onKeyUp);
-			renderer.domElement.removeEventListener('click', requestPointerLock);
+			renderer.domElement.removeEventListener('click', handleCanvasClick);
 		};
 	});
 

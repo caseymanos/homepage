@@ -230,7 +230,7 @@
 					<span class="stat-label">stars</span>
 				</div>
 			</div>
-			<p class="proximity-hint">Click the planet to open GitHub</p>
+			<p class="proximity-hint">🖱️ Click the glowing planet to open GitHub</p>
 		</div>
 	{/if}
 

@@ -64,13 +64,15 @@
 		}
 	});
 
-	// Update hover state
+	// Update hover state with stronger visual feedback
 	$effect(() => {
 		if (material) {
 			material.uniforms.uHover.value = isHovered ? 1.0 : 0.0;
+			material.uniforms.uGlowIntensity.value = isHovered ? 2.5 : 1.0;
 		}
 		if (glowMaterial) {
 			glowMaterial.uniforms.uHover.value = isHovered ? 1.0 : 0.0;
+			glowMaterial.uniforms.uOpacity.value = isHovered ? 0.8 : 0.4;
 		}
 	});
 
@@ -87,22 +89,25 @@
 	// Click handler - open GitHub
 	function handleClick(event: MouseEvent) {
 		event.stopPropagation();
+		event.preventDefault();
 		window.open(repo.url, '_blank', 'noopener,noreferrer');
 	}
 
 	// Hover handlers
-	function handlePointerEnter() {
+	function handlePointerEnter(event: PointerEvent) {
+		event.stopPropagation();
 		isHovered = true;
 		document.body.style.cursor = 'pointer';
 	}
 
-	function handlePointerLeave() {
+	function handlePointerLeave(event: PointerEvent) {
+		event.stopPropagation();
 		isHovered = false;
 		document.body.style.cursor = 'default';
 	}
 
-	// Scale on hover
-	const scale = $derived(isHovered ? 1.1 : 1.0);
+	// Scale on hover - more dramatic
+	const scale = $derived(isHovered ? 1.2 : 1.0);
 </script>
 
 <T.Group {position} scale={scale}>
