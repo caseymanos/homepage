@@ -273,12 +273,20 @@
 
 	.project.featured {
 		border-color: #f97316;
-		background: linear-gradient(135deg, rgba(249, 115, 22, 0.05) 0%, transparent 100%);
+		background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(249, 115, 22, 0.05) 100%);
 	}
 
 	.project.featured:hover {
 		border-color: #fb923c;
-		background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, transparent 100%);
+		background: linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 100%);
+	}
+
+	.project.featured h2 {
+		color: #fff;
+	}
+
+	.project.featured .description {
+		color: rgba(255, 255, 255, 0.85);
 	}
 
 	.featured-badge {

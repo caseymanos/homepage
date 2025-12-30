@@ -142,3 +142,116 @@ a {
 a:hover {
 	color: var(--link-hover);
 }
+
+/* Card design tokens */
+:root {
+	--card-radius: 1rem;
+	--card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+	--card-shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.15);
+	--tilt-max: 15deg;
+	--transition-smooth: cubic-bezier(0.23, 1, 0.32, 1);
+	--accent-rgb: 0, 0, 0;
+}
+
+.dark {
+	--card-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+	--card-shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.5);
+	--accent-rgb: 255, 255, 255;
+}
+
+/* Modern preset accent RGB override */
+.light[data-preset='modern'] {
+	--accent-rgb: 99, 102, 241;
+}
+
+.dark[data-preset='modern'] {
+	--accent-rgb: 129, 140, 248;
+}
+
+/* Classic preset accent RGB override */
+.light[data-preset='classic'] {
+	--accent-rgb: 26, 77, 46;
+}
+
+.dark[data-preset='classic'] {
+	--accent-rgb: 127, 191, 127;
+}
+
+/* Brutalist preset accent RGB override */
+.light[data-preset='brutalist'] {
+	--accent-rgb: 0, 0, 255;
+}
+
+.dark[data-preset='brutalist'] {
+	--accent-rgb: 255, 0, 255;
+}
+
+/* Timeline animation tokens */
+:root {
+	--timeline-animation-duration: 0.6s;
+	--timeline-animation-ease: cubic-bezier(0.4, 0, 0.2, 1);
+	--timeline-stagger-delay: 0.1s;
+}
+
+/* Smooth scroll for better timeline experience */
+html {
+	scroll-behavior: smooth;
+}
+
+/* Timeline scroll reveal animations */
+@keyframes fadeSlideLeft {
+	from {
+		opacity: 0;
+		transform: translateX(-40px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes fadeSlideRight {
+	from {
+		opacity: 0;
+		transform: translateX(40px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes fadeScale {
+	from {
+		opacity: 0;
+		transform: scale(0.9);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes drawLine {
+	from {
+		height: 0;
+	}
+	to {
+		height: 100%;
+	}
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}

@@ -23,7 +23,7 @@
 	.mode-toggle {
 		padding: 0.5rem;
 		background: transparent;
-		border: 1px solid var(--border);
+		/* border: 1px solid var(--border); */
 		border-radius: 0.25rem;
 		cursor: pointer;
 		font-size: 1.25rem;

@@ -82,9 +82,7 @@
 			</div>
 			<p class="company">Gauntlet AI - 10 Week Program (1.2% acceptance rate)</p>
 			<ul>
-				<li>Created open source clone of t3.chat at opent3.chat</li>
-				<li>Developed complete applications weekly using cutting-edge AI development techniques</li>
-				<li>Implemented projects using LangChain, MCPs, and modern AI tooling</li>
+				<li>Developed complete applications weekly using with tools and techniques that didn't exist 6 months ago</li>
 			</ul>
 		</div>
 	</section>
