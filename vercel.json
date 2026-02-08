@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/h2h/:path*",
+      "destination": "https://h2h-puce.vercel.app/:path*"
+    },
+    {
+      "source": "/h2h",
+      "destination": "https://h2h-puce.vercel.app/"
+    }
+  ]
+}
