@@ -54,44 +54,44 @@
 			</h2>
 			
 			<div class="featured-grid">
-				<!-- Metriq - Top Featured -->
-				<a 
-					href="https://getmetriq.dev" 
-					target="_blank" 
+				<!-- node-webcodecs - Top Featured -->
+				<a
+					href="https://www.npmjs.com/package/node-webcodecs"
+					target="_blank"
 					rel="noopener noreferrer"
 					class="project-card showcase"
-					onmouseenter={() => hoveredProject = 'metriq'}
+					onmouseenter={() => hoveredProject = 'node-webcodecs'}
 					onmouseleave={() => hoveredProject = null}
 				>
-					<div class="card-preview">
-						<div class="preview-frame">
-							<iframe 
-								src="https://getmetriq.dev" 
-								title="Metriq Preview"
-								loading="lazy"
-								sandbox="allow-scripts allow-same-origin"
-							></iframe>
-							<div class="preview-overlay">
-								<span class="preview-cta">Visit Site →</span>
+					<div class="card-preview dreamshot-preview">
+						<div class="preview-placeholder">
+							<div class="preview-gradient webcodecs-gradient"></div>
+							<div class="preview-content">
+								<span class="preview-icon">🎬</span>
+								<span class="preview-title">node-webcodecs</span>
+								<span class="preview-subtitle">npm i node-webcodecs</span>
 							</div>
+						</div>
+						<div class="preview-overlay">
+							<span class="preview-cta">View on npm →</span>
 						</div>
 					</div>
 					<div class="card-content">
 						<div class="card-header">
-							<h3>Metriq</h3>
-							<span class="card-badge amber">AI Platform</span>
+							<h3>node-webcodecs</h3>
+							<span class="card-badge amber">Open Source</span>
 						</div>
-						<p class="card-tagline">Cursor for Data Teams</p>
+						<p class="card-tagline">WebCodecs for Node.js</p>
 						<p class="card-description">
-							LangChain network of agents that coordinate to solve data science problems autonomously. 
-							Metriq Solver plans, codes, and verifies complex analysis in Jupyter notebooks. 
-							Approaching SOTA on industry benchmarks. Built in under a week.
+							Native WebCodecs API for Node.js — browser-standard video/audio encoding and decoding,
+							server-side. Supports H.264, HEVC, VP8/VP9, AV1, and AAC/Opus with hardware acceleration.
+							Available on npm and bun.
 						</p>
 						<div class="card-tech">
-							<span>LangChain</span>
-							<span>AI Agents</span>
-							<span>Jupyter</span>
-							<span>Python</span>
+							<span>Node.js</span>
+							<span>WebCodecs</span>
+							<span>C++</span>
+							<span>Video/Audio</span>
 						</div>
 					</div>
 				</a>
@@ -147,8 +147,7 @@
 
 			<div class="projects-list">
 				<!-- EP-133 Interactive Guide -->
-				<div class="project-item featured-item">
-					<div class="item-marker new">NEW</div>
+				<div class="project-item">
 					<div class="item-content">
 						<h3>EP-133 Interactive Guide</h3>
 						<p>
@@ -187,23 +186,23 @@
 					</div>
 				</div>
 
-				<!-- node-webcodecs -->
+				<!-- Metriq -->
 				<div class="project-item">
 					<div class="item-content">
-						<h3>node-webcodecs</h3>
+						<h3>Metriq</h3>
 						<p>
-							Native WebCodecs API implementation for Node.js—browser-standard video/audio 
-							encoding and decoding for server-side JavaScript. Supports H.264, HEVC, VP8/VP9, 
-							AV1, and AAC/Opus codecs with hardware acceleration. Available on npm and bun.
+							Cursor for data teams — a LangChain agent network that plans, codes, and verifies
+							complex analysis in Jupyter notebooks. Approached SOTA on industry benchmarks.
+							Built in under a week as a Gauntlet portfolio piece.
 						</p>
 						<div class="item-tech">
-							<span>Node.js</span>
-							<span>WebCodecs</span>
-							<span>C++</span>
-							<span>Video/Audio</span>
+							<span>LangChain</span>
+							<span>AI Agents</span>
+							<span>Jupyter</span>
+							<span>Python</span>
 						</div>
-						<a href="https://www.npmjs.com/package/node-webcodecs" target="_blank" rel="noopener noreferrer" class="item-link">
-							npm →
+						<a href="https://getmetriq.dev" target="_blank" rel="noopener noreferrer" class="item-link">
+							getmetriq.dev →
 						</a>
 					</div>
 				</div>
@@ -536,6 +535,10 @@
 		background: linear-gradient(135deg, #1e1b4b 0%, #581c87 50%, #1e3a5f 100%);
 	}
 
+	.webcodecs-gradient {
+		background: linear-gradient(135deg, #064e3b 0%, #0f766e 50%, #1e3a8a 100%);
+	}
+
 	.preview-gradient::before {
 		content: '';
 		position: absolute;
@@ -628,27 +631,6 @@
 
 	.project-item:hover::before {
 		background: var(--accent);
-	}
-
-	.project-item.featured-item::before {
-		background: #f97316;
-	}
-
-	.item-marker {
-		position: absolute;
-		top: -0.5rem;
-		right: 1rem;
-		padding: 0.25rem 0.75rem;
-		border-radius: 2rem;
-		font-size: 0.625rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-	}
-
-	.item-marker.new {
-		background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-		color: white;
 	}
 
 	.item-content h3 {

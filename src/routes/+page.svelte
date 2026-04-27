@@ -6,19 +6,22 @@
 	<h1>Casey Manos</h1>
 
 	<p class="intro">
-		Welcome! Software engineer, running enthusiast, and a whole lot more.  
+		Software engineer, running enthusiast, and a whole lot more.
 	</p>
 
 	<h2>My Background</h2>
 	<p>
-		Currently I'm going through Gauntlet AI's 3rd cohort. Also pursuing a M.S. in Computer Science at Georgia Tech, specializing in Artificial Intelligence.
-		Gauntlet AI requires ~100 hour weeks for 10 weeks, so I left my job at JP Morgan Chase, where I worked for 3.5 years as a backend engineer. I was working on  
-		modernizing legacy Java apps, building out and moving services to AWS, and developing the OAuth/OIDC provider services for third party connections.
+		I'm a founding engineer at <a href="https://adapt.com">Adapt</a>, building an AI computer for business — the platform learns how a company works,
+		answers questions across its data stack, and automates workflows from Slack. Joined in 2026 after coming out of Gauntlet AI's 3rd cohort.
 	</p>
 	<p>
-		I graduated from OSU with a B.S. in Computer Engineering. I also ran a ton, going from a mediocre high school runner to competing in D1 meets and racing the Boston Marathon.
-		Spending my free time these days running, hanging out with my incredible girlfriend Reilly and two sweet cats, and working on projects! 
-		Relatively new to taking this stuff seriously so I've been working hard to catch up with my very impressive X feed and have a pretty gnarly backlog of dev blogs and papers, but open to more :) 
+		Before Adapt I spent 3.5 years at JP Morgan Chase as a backend engineer — modernizing legacy Java apps, moving services to AWS,
+		and developing the OAuth/OIDC provider services for third party connections. I briefly started an M.S. in CS at Georgia Tech (OMSCS, AI specialization)
+		before withdrawing for the Adapt offer.
+	</p>
+	<p>
+		I graduated from OSU with a B.S. in Computer Engineering. Outside of work I run a lot — went from a mediocre high school runner to competing in D1 meets
+		and racing the Boston Marathon — and spend the rest of my time with my girlfriend Reilly, our two cats, and side projects.
 	</p>
 
 	<h2>Contact</h2>

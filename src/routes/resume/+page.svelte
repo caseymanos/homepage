@@ -9,6 +9,17 @@
 		<h2>Experience</h2>
 		<div class="job">
 			<div class="job-header">
+				<h3>Founding Engineer</h3>
+				<span class="date">2026 - Present</span>
+			</div>
+			<p class="company"><a href="https://adapt.com">Adapt</a></p>
+			<ul>
+				<li>Building an AI computer for business — a Slack-native platform that learns how a company works, answers questions across its data stack, and automates workflows</li>
+			</ul>
+		</div>
+
+		<div class="job">
+			<div class="job-header">
 				<h3>Software Engineer II</h3>
 				<span class="date">Jul 2024 - Oct 2025</span>
 			</div>
@@ -78,11 +89,11 @@
 		<div class="job">
 			<div class="job-header">
 				<h3>Gauntlet AI Cohort 3</h3>
-				<span class="date">2024</span>
+				<span class="date">2025</span>
 			</div>
 			<p class="company">Gauntlet AI - 10 Week Program (1.2% acceptance rate)</p>
 			<ul>
-				<li>Developed complete applications weekly using with tools and techniques that didn't exist 6 months ago</li>
+				<li>Shipped a complete application every week against aggressive deadlines using the latest agentic tooling</li>
 			</ul>
 		</div>
 	</section>
@@ -92,10 +103,10 @@
 		<div class="job">
 			<div class="job-header">
 				<h3>M.S. Computer Science</h3>
-				<span class="date">Aug 2025 - Present</span>
+				<span class="date">Aug 2025 - Oct 2025</span>
 			</div>
-			<p class="company">Georgia Institute of Technology</p>
-			<p>OMSCS - Machine Learning for Trading, Robotics: AI Techniques</p>
+			<p class="company">Georgia Institute of Technology (OMSCS, AI specialization)</p>
+			<p>Coursework: Machine Learning for Trading, Robotics: AI Techniques. Withdrew to join Adapt.</p>
 		</div>
 
 		<div class="job">

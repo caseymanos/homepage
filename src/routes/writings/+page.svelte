@@ -6,19 +6,13 @@
 	<h1>Writings</h1>
 
 	<div class="posts">
-		<a href="/writings/first-post" class="post">
-			<h2>Substack coming</h2>
-			<p class="date">January 1, 2026</p>
+		<div class="post placeholder">
+			<h2>Coming soon</h2>
 			<p class="excerpt">
-				Watch this space i swear im gonna start writing one day
+				Notes on what I'm building at Adapt, agentic systems, and whatever else is on my mind.
+				Nothing published yet — check back.
 			</p>
-		</a>
-
-		<a href="/writings/second-post" class="post">
-			<h2>No seriously</h2>
-			<p class="date">December 15, 2027</p>
-			<p class="excerpt">Want to become more high agency about being high agency so i'm gonna replace these with writings as soon as i finish week 3 of Gauntlet AI</p>
-		</a>
+		</div>
 	</div>
 </article>
 
@@ -55,17 +49,21 @@
 		transform: translateY(-2px);
 	}
 
+	.post.placeholder {
+		cursor: default;
+	}
+
+	.post.placeholder:hover {
+		border-color: var(--border);
+		background: transparent;
+		transform: none;
+	}
+
 	.post h2 {
 		font-size: 1.5rem;
 		font-weight: 600;
 		margin: 0 0 0.5rem 0;
 		color: var(--text-primary);
-	}
-
-	.date {
-		color: var(--text-secondary);
-		font-size: 0.875rem;
-		margin: 0 0 0.75rem 0;
 	}
 
 	.excerpt {
