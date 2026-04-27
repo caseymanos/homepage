@@ -1,11 +1,4 @@
-<script lang="ts">
-	import type { PageData } from './$types';
-	import SpaceScene from '$lib/components/galaxy/SpaceScene.svelte';
-
-	let { data }: { data: PageData } = $props();
-	let showSpaceScene = $state(false);
-	let hoveredProject = $state<string | null>(null);
-</script>
+<script lang="ts"></script>
 
 <svelte:head>
 	<title>Projects - Casey Manos</title>
@@ -17,37 +10,13 @@
 	/>
 </svelte:head>
 
-{#if showSpaceScene}
-	<div class="space-wrapper">
-		<button class="exit-space" onclick={() => (showSpaceScene = false)}>
-			✕ Exit Space Mode
-		</button>
-		{#if data.repos && data.repos.length > 0}
-			<SpaceScene repos={data.repos} />
-		{:else}
-			<div class="space-error">
-				<p>Unable to load repos for space mode.</p>
-				<button onclick={() => (showSpaceScene = false)}>Go Back</button>
-			</div>
-		{/if}
-	</div>
-{:else}
-	<article class="projects-page">
-		<header class="page-header">
-			<h1>Projects</h1>
-			<p class="subtitle">Things I've built, shipped, and obsessed over</p>
-		</header>
+<article class="projects-page">
+	<header class="page-header">
+		<h1>Projects</h1>
+		<p class="subtitle">Things I've built, shipped, and obsessed over</p>
+	</header>
 
-		<!-- Space Mode Button -->
-		<button class="space-button" onclick={() => (showSpaceScene = true)}>
-			<span class="space-icon">🚀</span>
-			<span class="space-text">
-				<strong>Enter Space Mode</strong>
-				<small>Experimental 3D flight through my GitHub repos</small>
-			</span>
-		</button>
-
-		<!-- Featured Projects with Live Previews -->
+	<!-- Featured Projects with Live Previews -->
 		<section class="featured-section">
 			<h2 class="section-title">
 				<span class="title-accent">●</span> Live Projects
@@ -60,8 +29,6 @@
 					target="_blank"
 					rel="noopener noreferrer"
 					class="project-card showcase"
-					onmouseenter={() => hoveredProject = 'node-webcodecs'}
-					onmouseleave={() => hoveredProject = null}
 				>
 					<div class="card-preview dreamshot-preview">
 						<div class="preview-placeholder">
@@ -102,8 +69,6 @@
 					target="_blank" 
 					rel="noopener noreferrer"
 					class="project-card showcase"
-					onmouseenter={() => hoveredProject = 'dreamshot'}
-					onmouseleave={() => hoveredProject = null}
 				>
 					<div class="card-preview dreamshot-preview">
 						<div class="preview-placeholder">
@@ -226,8 +191,7 @@
 				</div>
 			</div>
 		</section>
-	</article>
-{/if}
+</article>
 
 <style>
 	/* Page Layout */
@@ -278,86 +242,6 @@
 		font-size: 0.75rem;
 	}
 
-	/* Space Mode */
-	.space-wrapper {
-		position: fixed;
-		inset: 0;
-		z-index: 100;
-		background: #000;
-	}
-
-	.exit-space {
-		position: fixed;
-		top: 1rem;
-		left: 1rem;
-		z-index: 200;
-		padding: 0.5rem 1rem;
-		background: rgba(255, 255, 255, 0.1);
-		border: 1px solid rgba(255, 255, 255, 0.3);
-		border-radius: 0.5rem;
-		color: white;
-		font-size: 0.875rem;
-		cursor: pointer;
-		backdrop-filter: blur(10px);
-		transition: all 0.2s;
-	}
-
-	.exit-space:hover {
-		background: rgba(255, 255, 255, 0.2);
-	}
-
-	.space-error {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		height: 100vh;
-		color: white;
-		gap: 1rem;
-	}
-
-	.space-button {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		width: 100%;
-		padding: 1rem 1.25rem;
-		margin-bottom: 3rem;
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		border-radius: 0.75rem;
-		cursor: pointer;
-		transition: all 0.3s ease;
-		text-align: left;
-	}
-
-	.space-button:hover {
-		border-color: var(--accent);
-		transform: translateY(-2px);
-		box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
-	}
-
-	.space-icon {
-		font-size: 1.5rem;
-	}
-
-	.space-text {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-	}
-
-	.space-text strong {
-		color: var(--text-primary);
-		font-family: 'Syne', sans-serif;
-		font-weight: 600;
-	}
-
-	.space-text small {
-		color: var(--text-secondary);
-		font-size: 0.8125rem;
-	}
-
 	/* Featured Section */
 	.featured-section {
 		margin-bottom: 4rem;
@@ -396,21 +280,6 @@
 		aspect-ratio: 16 / 10;
 		overflow: hidden;
 		background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-	}
-
-	.preview-frame {
-		position: relative;
-		width: 100%;
-		height: 100%;
-	}
-
-	.preview-frame iframe {
-		width: 200%;
-		height: 200%;
-		transform: scale(0.5);
-		transform-origin: top left;
-		border: none;
-		pointer-events: none;
 	}
 
 	.preview-overlay {
