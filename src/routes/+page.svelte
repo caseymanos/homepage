@@ -21,7 +21,7 @@
 	</p>
 	<p>
 		I graduated from OSU with a B.S. in Computer Engineering. Outside of work I run a lot — went from a mediocre high school runner to competing in D1 meets
-		and racing the Boston Marathon — and spend the rest of my time with my girlfriend Reilly, our two cats, and side projects.
+		and racing the Boston Marathon — and spend the rest of my time with my girlfriend Reilly, our two cats, and <a href="/projects">side projects</a>.
 	</p>
 
 	<h2>Contact</h2>
@@ -56,6 +56,10 @@
 	.prose p {
 		margin-bottom: 1.5rem;
 		color: var(--text-primary);
+	}
+
+	.prose p a {
+		text-decoration: underline;
 	}
 
 	.intro {
