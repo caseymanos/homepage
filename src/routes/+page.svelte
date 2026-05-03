@@ -20,6 +20,7 @@
 
 	<h2>Contact</h2>
 	<ul class="contact-list">
+		<li><a href="/resume">Resume</a></li>
 		<li><a href="https://linkedin.com/in/casey-manos">LinkedIn</a></li>
 		<li><a href="mailto:manoscasey@gmail.com">Email</a></li>
 		<li><a href="https://github.com/caseymanos">Github</a></li>
