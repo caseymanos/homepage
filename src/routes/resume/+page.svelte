@@ -14,7 +14,10 @@
 			</div>
 			<p class="company"><a href="https://adapt.com">Adapt</a></p>
 			<ul>
-				<li>Building an AI computer for business — a Slack-native platform that learns how a company works, answers questions across its data stack, and automates workflows</li>
+				<li>Building an AI computer for business that lets teams ask questions across their data stack, automate recurring workflows, and build internal apps and dashboards without writing code</li>
+				<li>Available in Slack and the web app, with Teams coming soon</li>
+				<li>Integrations across data warehouses, BI, CRM, marketing automation, help desk, payments, email, and LinkedIn</li>
+				<li>SOC 2 Type I certified (Type II in progress); customer data is never used to train models</li>
 			</ul>
 		</div>
 
@@ -100,15 +103,6 @@
 
 	<section>
 		<h2>Education</h2>
-		<div class="job">
-			<div class="job-header">
-				<h3>M.S. Computer Science</h3>
-				<span class="date">Aug 2025 - Oct 2025</span>
-			</div>
-			<p class="company">Georgia Institute of Technology (OMSCS, AI specialization)</p>
-			<p>Coursework: Machine Learning for Trading, Robotics: AI Techniques. Withdrew to join Adapt.</p>
-		</div>
-
 		<div class="job">
 			<div class="job-header">
 				<h3>B.S. Computer Engineering</h3>
