@@ -7,7 +7,7 @@
 
 	<p>
 		I'm a founding engineer at <a href="https://adapt.com">adapt.com</a>. Worked as a backend engineer at JPMC for a few years
-	 after receiving my B.S. in Computer Engineering from OSU(go bucks!).
+		before that, after receiving my B.S. in Computer Engineering from OSU (go bucks!).
 	</p>
 	<p>
 		I'm a huge track and field fan, and am currently training for a 2:35 marathon at Chicago this fall. I've been running
