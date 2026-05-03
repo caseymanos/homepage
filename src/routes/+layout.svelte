@@ -2,17 +2,8 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import ThemeSwitcher from '$lib/components/ThemeSwitcher.svelte';
-	import { theme } from '$lib/stores/theme.svelte';
-	import { page } from '$app/stores';
 
 	let { children } = $props();
-
-	const navLinks = [
-		{ href: '/', label: 'About' },
-		{ href: '/resume', label: 'Resume' },
-		{ href: '/writings', label: 'Writings' },
-		{ href: '/projects', label: 'Projects' }
-	];
 </script>
 
 <svelte:head>
@@ -27,16 +18,7 @@
 
 <div class="layout">
 	<header>
-		<nav>
-			<div class="nav-links">
-				{#each navLinks as link}
-					<a href={link.href} class:active={$page.url.pathname === link.href}>
-						{link.label}
-					</a>
-				{/each}
-			</div>
-			<ThemeSwitcher />
-		</nav>
+		<ThemeSwitcher />
 	</header>
 
 	<main>
@@ -49,7 +31,6 @@
 </div>
 
 <style>
-	/* Standard layout */
 	.layout {
 		min-height: 100vh;
 		display: flex;
@@ -60,31 +41,9 @@
 	}
 
 	header {
+		display: flex;
+		justify-content: flex-end;
 		margin-bottom: 4rem;
-	}
-
-	.layout nav {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 1.5rem;
-	}
-
-	.layout .nav-links {
-		display: flex;
-		gap: 2rem;
-		flex-wrap: wrap;
-	}
-
-	.layout .nav-links a {
-		font-size: 1rem;
-		font-weight: 400;
-	}
-
-	.layout .nav-links a.active {
-		color: var(--accent);
-		font-weight: 500;
 	}
 
 	.layout main {
@@ -102,15 +61,6 @@
 	@media (max-width: 640px) {
 		.layout {
 			padding: 1.5rem 1rem;
-		}
-
-		.layout nav {
-			flex-direction: column;
-			align-items: flex-start;
-		}
-
-		.layout .nav-links {
-			gap: 1.5rem;
 		}
 	}
 </style>
