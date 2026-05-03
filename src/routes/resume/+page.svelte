@@ -14,10 +14,7 @@
 			</div>
 			<p class="company"><a href="https://adapt.com">Adapt</a></p>
 			<ul>
-				<li>Building an AI computer for business that lets teams ask questions across their data stack, automate recurring workflows, and build internal apps and dashboards without writing code</li>
-				<li>Available in Slack and the web app</li>
-				<li>Integrations across data warehouses, BI, CRM, marketing automation, help desk, payments, email, and LinkedIn</li>
-				<li>SOC 2 Type I certified (Type II in progress); customer data is never used to train models</li>
+				<li>Building an AI computer for business</li>
 			</ul>
 		</div>
 
