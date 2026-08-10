@@ -6,6 +6,14 @@
 	<h1>Writings</h1>
 
 	<div class="posts">
+		<a class="post" href="/writings/6356-claims-104-applied">
+			<h2>I Ingested 6,356 Podcast Claims and Applied 104</h2>
+			<p class="excerpt">
+				Building the pipeline was the easy part. Deciding what to ignore was not.
+			</p>
+			<p class="meta">9 August 2026</p>
+		</a>
+
 		<a class="post" href="/writings/home-was-never-set">
 			<h2>$HOME Was Never Set, and Modal Hung for Four Weeks</h2>
 			<p class="excerpt">
