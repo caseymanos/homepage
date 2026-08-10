@@ -6,13 +6,13 @@
 	<h1>Writings</h1>
 
 	<div class="posts">
-		<div class="post placeholder">
-			<h2>Coming soon</h2>
+		<a class="post" href="/writings/home-was-never-set">
+			<h2>$HOME Was Never Set, and Modal Hung for Four Weeks</h2>
 			<p class="excerpt">
-				Notes on what I'm building at Adapt, agentic systems, and whatever else is on my mind.
-				Nothing published yet — check back.
+				A Cloudflare container, an expanduser() call, and why local Docker couldn't reproduce it.
 			</p>
-		</div>
+			<p class="meta">9 August 2026</p>
+		</a>
 	</div>
 </article>
 
@@ -70,5 +70,11 @@
 		color: var(--text-secondary);
 		margin: 0;
 		line-height: 1.6;
+	}
+
+	.meta {
+		color: var(--text-secondary);
+		font-size: 0.85rem;
+		margin: 0.75rem 0 0 0;
 	}
 </style>
