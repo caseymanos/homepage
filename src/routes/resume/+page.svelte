@@ -4,6 +4,7 @@
 
 <article class="prose">
 	<h1>Resume</h1>
+	<p><a href="/Casey_Manos_Resume.pdf" download>Download resume (PDF)</a></p>
 
 	<section>
 		<h2>Experience</h2>
