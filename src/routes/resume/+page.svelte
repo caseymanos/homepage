@@ -105,6 +105,15 @@
 		<h2>Education</h2>
 		<div class="job">
 			<div class="job-header">
+				<h3>Graduate Studies in Computer Science</h3>
+				<span class="date">Aug 2025 - Oct 2025</span>
+			</div>
+			<p class="company">Georgia Institute of Technology — Online M.S. in Computer Science (OMSCS)</p>
+			<p>Attended for half a semester before leaving to join a startup; degree not completed.</p>
+		</div>
+
+		<div class="job">
+			<div class="job-header">
 				<h3>B.S. Computer Engineering</h3>
 				<span class="date">May 2022</span>
 			</div>
