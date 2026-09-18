@@ -15,7 +15,9 @@
 			</div>
 			<p class="company"><a href="https://adapt.com">Adapt</a></p>
 			<ul>
-				<li>Building an AI computer for business</li>
+				<li>Building an AI computer for business, including private-by-default chats and reusable custom skills.</li>
+				<li>Built customer-branded Slack apps, phone messaging, and secure tool integrations through hosted MCP with OAuth.</li>
+				<li>Built a pipeline that turns user feedback into regression evals and proposed fixes, with before-and-after test results in pull requests.</li>
 			</ul>
 		</div>
 
