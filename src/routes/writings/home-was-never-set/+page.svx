@@ -1,0 +1,200 @@
+# $HOME Was Never Set, and Modal Hung for Four Weeks
+
+<p class="deck">A Cloudflare container, an <code>expanduser()</code> call, and why local Docker couldn't reproduce it.</p>
+
+<p class="byline">Casey Manos · 9 August 2026 · written with Claude Code from the commit history</p>
+
+On 26 May 2026 I triggered my podcast ingestion pipeline three times by hand. All three runs left the container in `state=running` and wrote nothing back to storage. The pipeline downloads new podcast episodes, transcribes them on a GPU, and writes digests — and it had simply stopped, silently, halfway through.
+
+I wrote down four suspects that day: Modal, Anthropic, intervals.icu, and Parallel. The pipeline calls all four over the network, the failure looked like a stalled connection, and container egress filtering seemed like the obvious culprit. All four were wrong.
+
+The container never set `HOME`. Modal's SDK resolves its credentials file through `os.path.expanduser("~/.modal.toml")`, and with no `HOME` in the environment that lookup missed a token file sitting exactly where I had written it, at `/root/.modal.toml`. The client fell back to interactive authentication and blocked on a gRPC handshake that would never complete. It took 26 days to find, almost entirely because I could not read the container's stdout.
+
+## The system, briefly
+
+`podcast-sync` is a weekly job in a personal training-data warehouse. It runs four stages: triage new episodes across seven podcast feeds, transcribe them, retry whatever missed, then write digests back to object storage. Transcription happens on [Modal](https://modal.com) — Faster-Whisper-large-v3-turbo on an A10G — because my laptop is not a good place to run a GPU workload on a schedule.
+
+The job had lived on my laptop as a `launchd` plist. In May I moved it to a Cloudflare Container Worker on a Sunday cron, which is where the trouble started. The move mattered for an unglamorous reason: a laptop-scheduled job only runs when the laptop is awake, and mine frequently isn't on Sunday morning.
+
+## Why local Docker was useless
+
+The first thing I did was run the same image locally. It worked. It reached the batch stage and successfully processed eight episodes from one feed before I killed it at the ten-minute mark.
+
+That result was actively misleading, and it's worth being precise about why. `docker run` sets `HOME` for you. It comes from the image's `USER` and the container runtime's passwd lookup, so a root container gets `HOME=/root` without anyone asking for it. Cloudflare's container runtime does not guarantee this. My entrypoint wrote credentials to `/root/.modal.toml` and assumed `~` would resolve there. Locally it did. In the cloud it didn't, even running as uid 0.
+
+<figure>
+<div class="trace">
+  <div class="trace-col ok">
+    <div class="trace-head">Local Docker <span class="tag">reached batch stage</span></div>
+    <ol>
+      <li><code>HOME=/root</code> <span class="note">set by the runtime</span></li>
+      <li><code>expanduser("~/.modal.toml")</code></li>
+      <li>→ <code>/root/.modal.toml</code> <span class="note">found</span></li>
+      <li>token read → gRPC authenticates</li>
+      <li class="outcome-ok">transcription starts</li>
+    </ol>
+  </div>
+  <div class="trace-col bad">
+    <div class="trace-head">Cloudflare container <span class="tag">state=running, no writeback</span></div>
+    <ol>
+      <li><code>HOME</code> <span class="note">unset, even at uid 0</span></li>
+      <li><code>expanduser("~/.modal.toml")</code></li>
+      <li>→ resolves away from <code>/root</code> <span class="note">file missed</span></li>
+      <li>SDK falls back to interactive auth</li>
+      <li class="outcome-bad">gRPC handshake blocks forever</li>
+    </ol>
+  </div>
+</div>
+<figcaption>The same image, the same credentials file, two environments. The only difference is whether the runtime set <code>HOME</code> before the SDK called <code>expanduser()</code>. Traced from the entrypoint and Modal SDK v1.4.2 behavior.</figcaption>
+</figure>
+
+The lesson generalizes past this one bug. `HOME` is a convention that something has to set — a login shell, a container runtime, an init system. Library code that calls `expanduser("~")` inherits that assumption silently, and a managed runtime is free not to honor it.
+
+## The part that actually cost a month
+
+The root cause is a four-line fix. Finding it took four weeks because the container's stdout was unreachable.
+
+The Worker's `tail` showed `onStart()` firing, so I knew the container was alive. The instances API reported `state=running`. But `wrangler containers ssh` returned `instance not found` for that same instance — the API said it existed and the CLI said it didn't. Container stdout, where the actual bug signature lived, was only viewable through the Cloudflare dashboard. I could see that the job was stuck and could not see why.
+
+So I stopped debugging the hang and fixed the observability instead. The entrypoint now prints a bounded diagnostic block before it does any real work:
+
+```bash
+log "DIAG HOME=${HOME} whoami=$(whoami 2>/dev/null) pwd=$(pwd)"
+log "DIAG modal.toml at /root: $([ -r /root/.modal.toml ] && echo readable || echo MISSING)"
+log "DIAG expanduser(~): $($UV python -c 'import os;print(os.path.expanduser("~/.modal.toml"))' 2>/dev/null)"
+log "DIAG modal client probe (10s budget):"
+timeout 10 $UV python -c \
+    "import modal; modal.Function.from_name('swap-whisper','transcribe_audio'); print('modal lookup OK')" \
+    2>&1 | sed 's/^/    /'
+probe_rc=${PIPESTATUS[0]}
+```
+
+Every step is bounded by `timeout`, so a misconfigured client can never hang the diagnostics that exist to diagnose the hang. The probe prints `HOME`, whether the token file is readable, and — the line that would have ended this in an afternoon — what `expanduser("~")` actually resolves to inside this runtime.
+
+**One shell detail is load-bearing.** That last line reads `PIPESTATUS[0]`, not `$?`. Piping the probe through `sed` for indentation means `$?` holds *sed's* exit code, and `sed` essentially always succeeds. A `|| echo failed` after the pipe would test the wrong command and report success while the probe timed out. `PIPESTATUS[0]` recovers the exit status of the first command in the pipeline, which distinguishes the three cases that matter: `0` passed, `124` timed out, anything else the probe's own failure.
+
+## The fix, and what I'd still call uncertain
+
+Three changes, deliberately redundant:
+
+```bash
+export HOME=/root
+export MODAL_TOKEN_ID MODAL_TOKEN_SECRET
+mkdir -p /root
+```
+
+Pinning `HOME` fixes the resolution. Passing the tokens as environment variables is the real belt: Modal's SDK reads `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` directly and needs no file at all, so this path works even if `expanduser` misbehaves again. Writing `/root/.modal.toml` stays as a third fallback.
+
+I verified it on 21 June with a manual run: the probe logged `DIAG modal probe passed (exit 0)` and the pipeline ran through triage across all seven feeds. Only then did I flip the cron from `[]` back to `0 13 * * SUN`, and only after several clean Sunday runs did I retire the laptop job so both copies weren't ingesting at once.
+
+Two honest limits on that claim. First, I confirmed *that* `HOME` was unset and *that* pinning it fixed the hang; I did not instrument the SDK to watch the gRPC client choose the interactive path, so that step is a well-supported inference from Modal's documented resolution order rather than something I observed directly. Second, this reconstruction comes from commit messages, the entrypoint source, and my own notes — there's no saved agent transcript from the debugging sessions, so the dead ends I hit between 26 May and 20 June are recorded only as far as I wrote them down at the time.
+
+What I'd keep from this: **when a job disappears into a managed runtime, the first fix is not to the job.** I spent four weeks guessing at network egress because guessing was cheaper than making the container talk. It wasn't. A ten-second startup probe, written on day one, would have printed the answer before I ever wrote down four suspects.
+
+<style>
+	.deck {
+		font-size: 1.15rem;
+		color: var(--text-secondary);
+		margin-top: -0.5rem;
+		margin-bottom: 1.25rem;
+		line-height: 1.5;
+	}
+
+	.byline {
+		font-size: 0.875rem;
+		color: var(--text-secondary);
+		margin-bottom: 2.5rem;
+		padding-bottom: 1.5rem;
+		border-bottom: 1px solid var(--border);
+	}
+
+	figure {
+		margin: 2.5rem 0;
+	}
+
+	.trace {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+	}
+
+	.trace-col {
+		border: 1px solid var(--border);
+		border-radius: 0.375rem;
+		padding: 1rem 1.1rem 1.1rem;
+		background: var(--bg-secondary);
+	}
+
+	.trace-col.ok {
+		border-left: 3px solid var(--border);
+	}
+
+	.trace-col.bad {
+		border-left: 3px solid var(--accent);
+	}
+
+	.trace-head {
+		font-size: 0.9rem;
+		font-weight: 600;
+		margin-bottom: 0.85rem;
+		line-height: 1.4;
+	}
+
+	.tag {
+		display: block;
+		font-weight: 400;
+		font-size: 0.78rem;
+		color: var(--text-secondary);
+		font-family: var(--font-mono);
+		margin-top: 0.2rem;
+	}
+
+	.trace-col ol {
+		margin: 0;
+		padding-left: 1.15rem;
+	}
+
+	.trace-col li {
+		font-size: 0.85rem;
+		line-height: 1.5;
+		margin-bottom: 0.5rem;
+		color: var(--text-primary);
+	}
+
+	.trace-col li:last-child {
+		margin-bottom: 0;
+	}
+
+	.trace-col code {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+	}
+
+	.note {
+		color: var(--text-secondary);
+		font-style: italic;
+	}
+
+	.outcome-ok,
+	.outcome-bad {
+		font-weight: 600;
+		padding-top: 0.15rem;
+	}
+
+	.outcome-bad {
+		color: var(--accent);
+	}
+
+	figcaption {
+		font-size: 0.85rem;
+		color: var(--text-secondary);
+		line-height: 1.55;
+		margin-top: 0.85rem;
+	}
+
+	@media (max-width: 640px) {
+		.trace {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

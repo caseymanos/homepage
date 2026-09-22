@@ -1,0 +1,186 @@
+# I Ingested 6,356 Podcast Claims and Applied 104
+
+<p class="deck">Building the pipeline was the easy part. Deciding what to ignore was not.</p>
+
+<p class="byline">Casey Manos · 9 August 2026 · written with Claude Code against the live database</p>
+
+For about two years I've run a personal research warehouse. It transcribes running podcasts, extracts every training claim the hosts make, resolves the studies they cite to primary sources, and indexes the result next to eight years of my own Garmin data so I can ask questions across both.
+
+Today it holds **6,356 claims** from **626 episodes** across ten feeds, with **502** resolved studies. An extraction model scored **4,086** of those claims — 64% — as highly relevant to my goals.
+
+I have applied **104**.
+
+That gap is the whole story. Not because the pipeline failed: it works, it costs about eleven cents an episode, and it surfaces things I would never have found by listening. The gap is there because ingestion and judgment are different problems, and only one of them got cheap.
+
+## What the thing actually is
+
+The warehouse spans two projects and reads from two very different sources.
+
+One side is personal: a Garmin export loaded into SQLite and queried through DuckDB — **2,941 activities from December 2017 through yesterday**, plus sleep, resting heart rate, and bodyweight, with training-load metrics pulled from intervals.icu alongside.
+
+The other side is the corpus. A podcast episode is downloaded, transcribed with Whisper, and passed to a language model that pulls out every distinct claim: a protocol, a framework, a study citation, an anecdote. Each claim gets a structured record — what kind of claim it is, whether the host endorsed or doubted it, a timestamp back to the audio, a relevance score, and a link to the underlying paper when one can be resolved through PubMed, OpenAlex, or Semantic Scholar.
+
+Both sides land in one indexed database with vector embeddings over the claims, so I can ask a question in plain language and get back the passages and the personal data that bear on it.
+
+On top of that sit **findings** — 33 markdown documents that are mine, not the corpus's. A finding is an argued position: what I currently believe about a training question, why, which evidence supports it, and what would change my mind. They cite each other and they cite primary sources. When my own data contradicts one, the convention is to append a dated correction rather than quietly edit the old claim away.
+
+## The number that surprised me
+
+Adding a podcast is a config file. Ingesting the back catalogue of a new show is an afternoon. Across 112 logged runs the median cost is **$0.112 per episode**, and total recorded spend on the whole corpus is **$33.98**. Wall time is about four minutes per episode end to end.
+
+So the marginal cost of *more* is approximately zero. Which is exactly the trap.
+
+<figure>
+<div class="funnel">
+  <div class="stage">
+    <div class="bar" style="--w:100%"></div>
+    <div class="lab"><strong>6,356</strong> claims extracted <span class="sub">626 episodes, 10 feeds</span></div>
+  </div>
+  <div class="stage">
+    <div class="bar" style="--w:64%"></div>
+    <div class="lab"><strong>4,086</strong> scored 4–5 for relevance <span class="sub">64% — the model thinks most of it matters</span></div>
+  </div>
+  <div class="stage">
+    <div class="bar" style="--w:3.1%"></div>
+    <div class="lab"><strong>197</strong> actually triaged <span class="sub">3.1% — surfaced against a watched question</span></div>
+  </div>
+  <div class="stage">
+    <div class="bar final" style="--w:1.6%"></div>
+    <div class="lab"><strong>104</strong> applied to a finding <span class="sub">1.6% — changed something I believe</span></div>
+  </div>
+
+  <div class="inset">
+    <div class="inset-head">Last two stages, magnified 20×</div>
+    <div class="stage">
+      <div class="bar" style="--w:62%"></div>
+      <div class="lab"><strong>197</strong> triaged <span class="sub">104 applied · 93 dismissed</span></div>
+    </div>
+    <div class="stage">
+      <div class="bar final" style="--w:33%"></div>
+      <div class="lab"><strong>104</strong> applied</div>
+    </div>
+  </div>
+</div>
+<figcaption>Every claim the warehouse holds, by how far it got. Bar length is proportional to count on a single scale; the last two stages are too small to read at that scale, so the dashed inset repeats them magnified 20× — the four bars above it remain directly comparable. The steep drop is between "the model says this is relevant" and "I looked at it," not between looking and keeping. Counts queried from the live database on 9 August 2026; triage counts from the append-only <code>applied.yaml</code> and <code>dismissed.yaml</code>.</figcaption>
+</figure>
+
+Read the bottom two bars together. Of the 197 claims I actually put in front of myself, I applied 104 and rejected 93. That is roughly a coin flip — a healthy rate, and evidence the triage step is doing real work rather than rubber-stamping.
+
+The brutal step is the one above it. The model marked 4,086 claims as highly relevant. I examined 197 of them. **The filter that mattered was not the relevance score. It was me having a specific open question.**
+
+## Why the relevance score can't do this job
+
+The scoring model is not wrong when it marks a claim relevant. A protocol for managing iron levels in endurance athletes genuinely is relevant to me. So is nearly every threshold-training framework, every heat-adaptation study, and every fueling guideline in the corpus. That's why 64% clears the bar.
+
+But *relevant to my goals in general* is not the same predicate as *should change what I do this month*. The second one depends on things the corpus cannot see: what I already believe, what I've already tried, what my own data says about how I respond, and which questions are actually open right now.
+
+That last one turned out to be the load-bearing piece. The system surfaces claims by matching them against **watches** — 26 declared pairs of (a finding, a topic I'm still uncertain about). A claim reaches me because it's similar to a question I have already written down as unresolved. Everything else stays in the database, searchable but unsurfaced.
+
+This inverts the usual retrieval framing. The corpus is not a thing to be consumed. It's a thing to be *queried when you have a question*, and the scarce resource is well-formed questions, not documents.
+
+## The docs said four podcasts. There were nine.
+
+While gathering the numbers above I opened the architecture document I keep for exactly this purpose — the one that's supposed to let me return after a break and reload the system into my head. It is dated 3 May 2026 and describes four configured podcasts, roughly 290 episodes, about 3,500 claims, and 19 findings.
+
+The live system had nine podcast configs, 626 episodes, 6,356 claims, and 33 findings. Every count was understated by 40 to 80 percent. Three months of drift.
+
+Nothing broke, and that's the point worth sitting with: **the document degraded silently in exactly the way it was written to prevent.** It's a hand-maintained snapshot of a system that changes weekly, so it decays at whatever rate I forget to update it — and I forget at exactly the moments I'm busy shipping, which are the moments it changes most.
+
+The findings don't have this problem, and the difference is instructive. A finding carries a `## Reproduce` section with the exact commands that generated its numbers. Anyone — including me in six months — can re-run them and see whether the claim still holds. The architecture doc has prose where those commands should be. I've since started treating any count in a document as suspect unless it ships with the query that produced it.
+
+## What I'd tell someone building one
+
+**Build the ingest, but budget for the judgment.** The pipeline is genuinely useful and genuinely cheap. It is also, in retrospect, about 20% of the work. The other 80% is maintaining a set of open questions precise enough that the corpus can answer them, and that part does not scale with compute.
+
+**Keep the rejections.** The dismissed ledger has 93 entries and is the most under-rated artifact in the system. Without it I'd re-litigate the same claims every few months, because a claim I rejected looks identical to a claim I've never seen. Recording *no* is as valuable as recording *yes*, and it's the thing most retrieval systems throw away.
+
+**Separate the corpus from your beliefs.** The single best structural decision was keeping findings as hand-written arguments the pipeline can never edit. The triage tool records that a claim should be integrated; it does not integrate it. That boundary is why I still trust the findings — they say what I think, not what the ingest happened to surface.
+
+**Assume every number in your docs is stale.** Ship the query alongside the claim, or expect to be off by half within a quarter.
+
+The honest summary is that I built a very efficient machine for producing 6,356 things I would not read, in order to find the 104 that changed my mind. I'd do it again — you cannot find the 104 without the 6,356, and no amount of upstream filtering identifies them in advance. But I'd stop describing the pipeline as the accomplishment. The pipeline is scaffolding. The ledger of what I applied, and what I refused, is the actual artifact.
+
+<style>
+	.deck {
+		font-size: 1.15rem;
+		color: var(--text-secondary);
+		margin-top: -0.5rem;
+		margin-bottom: 1.25rem;
+		line-height: 1.5;
+	}
+
+	.byline {
+		font-size: 0.875rem;
+		color: var(--text-secondary);
+		margin-bottom: 2.5rem;
+		padding-bottom: 1.5rem;
+		border-bottom: 1px solid var(--border);
+	}
+
+	figure {
+		margin: 2.5rem 0;
+	}
+
+	.funnel {
+		display: flex;
+		flex-direction: column;
+		gap: 1.1rem;
+		border: 1px solid var(--border);
+		border-radius: 0.375rem;
+		padding: 1.4rem 1.3rem;
+		background: var(--bg-secondary);
+	}
+
+	.stage {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.bar {
+		height: 0.7rem;
+		width: var(--w);
+		min-width: 3px;
+		background: var(--text-secondary);
+		border-radius: 2px;
+	}
+
+	.bar.final {
+		background: var(--accent);
+	}
+
+	.lab {
+		font-size: 0.88rem;
+		line-height: 1.45;
+		color: var(--text-primary);
+	}
+
+	.sub {
+		display: block;
+		font-size: 0.8rem;
+		color: var(--text-secondary);
+	}
+
+	.inset {
+		display: flex;
+		flex-direction: column;
+		gap: 0.9rem;
+		margin-top: 0.4rem;
+		padding: 0.9rem 1rem 1rem;
+		border: 1px dashed var(--border);
+		border-radius: 0.3rem;
+	}
+
+	.inset-head {
+		font-size: 0.78rem;
+		color: var(--text-secondary);
+		font-family: var(--font-mono);
+	}
+
+	figcaption {
+		font-size: 0.85rem;
+		color: var(--text-secondary);
+		line-height: 1.55;
+		margin-top: 0.85rem;
+	}
+</style>
