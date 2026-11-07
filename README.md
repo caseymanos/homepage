@@ -1,38 +1,33 @@
-# sv
+# Casey Manos — personal site
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A static Astro site for caseymanos.com. Content lives in `src/pages`, shared layouts in `src/layouts`, and public assets in `static`.
 
-## Creating a project
+## Development
 
-If you're seeing this, you've probably already done this step. Congrats!
-
-```sh
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Use Node 22.12+ (or Node 24) and npm:
 
 ```sh
+npm ci
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```sh
+npm run check
 npm run build
+npm run preview
 ```
 
-You can preview the production build with `npm run preview`.
+The build produces static HTML in `dist`. Vercel uses the Astro configuration in `vercel.json`; no server runtime is required for the content pages. Existing `/h2h` proxy routes and the standalone `/dad/` guide are preserved.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+## Content and performance
+
+- Edit the homepage, résumé, projects, and writing index in their `.astro` pages.
+- Essays are Markdown in `src/pages/writings`, using `PostLayout.astro`.
+- All six content routes render at build time, with no client framework or hydration.
+- The original Courier New typography, white background, and blue links are preserved.
+- Content pages require no client JavaScript.
+- Hashed assets receive immutable caching. HTML stays revalidatable on deployment.
+- `next/` is an unrelated local experiment and is excluded from Astro checks.
+
+The standalone `/dad/` application retains its own existing assets and runtime.
+
+## Agent-readable content
+
+The build generates a sitemap and Markdown from the rendered pages. A small Vercel function serves Markdown content negotiation, the public `/api/profile` endpoint, and structured API errors. HTML pages remain static. API documentation is at `/docs/`; the schema is at `/openapi.json`. Run `npm run build` before deploying so generated response data exists.

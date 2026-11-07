@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Casey Manos API documentation">
+	<h1>Casey Manos API documentation</h1>
+	<p>
+		The Casey Manos website provides a small public, read-only API for retrieving the same profile
+		information available on the homepage. GET /api/profile returns JSON with name, description,
+		url, email, and sameAs profile links. No authentication or API key is required. The API has no
+		write operations and does not provide access to private records. GET and HEAD are supported.
+		Unsupported methods return HTTP 405, and unknown API routes return HTTP 404, with structured
+		JSON including an error code, message, and resolution hint. The machine-readable OpenAPI schema
+		is at /openapi.json. For full page content, send Accept: text/markdown to a page URL. Responses
+		include Vary: Accept, so clients should respect representation-aware caching. Use /sitemap.xml
+		to discover pages and /llms.txt for guidance. There is no MCP server, SDK, or CLI for this site.
+	</p>
+	<p>
+		<a href="/">Home</a> · <a href="/resume/">Resume</a> · <a href="/contact/">Contact</a> ·{' '}
+		<a href="/openapi.json">OpenAPI</a>
+	</p>
+</BaseLayout>
+<style>
+	h1 {
+		font-size: 2rem;
+		margin-bottom: 2rem;
+	}
+	p {
+		line-height: 1.7;
+		margin-bottom: 1.5rem;
+	}
+</style>

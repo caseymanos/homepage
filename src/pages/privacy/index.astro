@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Privacy">
+	<h1>Privacy</h1>
+	<p>
+		The main content pages on this personal website can be read without creating an account or
+		signing in. The profile API returns only the public biographical information and links already
+		published here; it does not accept submissions or change stored data. Hosting infrastructure may
+		process technical request information, such as an IP address and browser headers, to deliver
+		pages and protect the service. External links lead to services with their own privacy practices.
+		The separately hosted application under /h2h and the standalone /dad guide may behave
+		differently from the main content pages. Emailing Casey shares the contents of your message with
+		Casey and the email providers involved. Avoid including sensitive personal information. Privacy
+		questions can be sent to manoscasey@gmail.com.
+	</p>
+	<p>
+		<a href="/">Home</a> · <a href="/resume/">Resume</a> · <a href="/contact/">Contact</a> ·{' '}
+		<a href="/openapi.json">OpenAPI</a>
+	</p>
+</BaseLayout>
+<style>
+	h1 {
+		font-size: 2rem;
+		margin-bottom: 2rem;
+	}
+	p {
+		line-height: 1.7;
+		margin-bottom: 1.5rem;
+	}
+</style>

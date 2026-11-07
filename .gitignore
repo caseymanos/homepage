@@ -22,3 +22,10 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .env*.local
+
+# Astro
+/dist/
+/.astro/
+
+# Generated Markdown response data
+/api/content-data.json

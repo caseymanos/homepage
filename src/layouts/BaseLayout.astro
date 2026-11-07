@@ -1,0 +1,100 @@
+---
+import '../app.css';
+import profile from '../../api/profile-data.json';
+interface Props {
+	title: string;
+	description?: string;
+}
+const {
+	title,
+	description = 'Casey Manos — engineer, runner, and builder. Projects, writing, and experience.'
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonical} />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<title>{title}</title>
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:image" content="https://caseymanos.com/social-card.svg" />
+		<link
+			rel="alternate"
+			type="text/markdown"
+			href={`${canonical.pathname.replace(/\/$/, '') || '/index'}.md`}
+		/>
+		<script
+			type="application/ld+json"
+			set:html={JSON.stringify({ '@context': 'https://schema.org', '@type': 'Person', ...profile })}
+		/>
+	</head>
+	<body>
+		<a href="#main" class="skip-link">
+			Skip to content
+		</a>
+		<div class="layout">
+			<header aria-hidden="true"></header>
+			<div class="content">
+				<main id="main">
+					<slot />
+				</main>
+				<footer>
+					<p>© {new Date().getFullYear()}</p>
+				</footer>
+			</div>
+		</div>
+	</body>
+</html>
+<style>
+	.layout {
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+		max-width: 65ch;
+		margin: 0 auto;
+		padding: 2rem 1.5rem;
+	}
+	header {
+		height: 2.25rem;
+		margin-bottom: 4rem;
+	}
+	.content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+	}
+	main {
+		flex: 1;
+		min-width: 0;
+	}
+	footer {
+		margin-top: 4rem;
+		padding-top: 2rem;
+		border-top: 1px solid var(--border);
+		color: var(--text-secondary);
+		font-size: 0.875rem;
+	}
+	.skip-link {
+		position: absolute;
+		top: -5rem;
+		left: 1rem;
+		padding: 0.5rem;
+		background: var(--bg-primary);
+	}
+	.skip-link:focus {
+		top: 0.5rem;
+	}
+	@media (max-width: 640px) {
+		.layout {
+			padding: 1.5rem 1rem;
+		}
+	}
+</style>
