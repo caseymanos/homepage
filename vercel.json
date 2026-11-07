@@ -1,54 +1,56 @@
 {
-	"rewrites": [
-		{
-			"source": "/h2h/:path*",
-			"destination": "https://h2h-puce.vercel.app/:path*"
-		},
-		{
-			"source": "/h2h",
-			"destination": "https://h2h-puce.vercel.app/"
-		},
-		{
-			"source": "/api/:path*",
-			"destination": "/api/content?path=api/:path*"
-		},
-		{
-			"source": "/:path*.md",
-			"destination": "/api/content?path=:path*.md"
-		},
-		{
-			"source": "/:path*",
-			"has": [
-				{
-					"type": "header",
-					"key": "accept",
-					"value": ".*text/markdown.*"
-				}
-			],
-			"destination": "/api/content?path=:path*"
-		}
-	],
-	"framework": "astro",
-	"buildCommand": "npm run build",
-	"outputDirectory": "dist",
-	"headers": [
-		{
-			"source": "/_astro/:path*",
-			"headers": [
-				{
-					"key": "Cache-Control",
-					"value": "public, max-age=31536000, immutable"
-				}
-			]
-		},
-		{
-			"source": "/:path*",
-			"headers": [
-				{
-					"key": "Vary",
-					"value": "Accept"
-				}
-			]
-		}
-	]
+  "framework": "astro",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "routes": [
+    {
+      "src": "/h2h",
+      "dest": "https://h2h-puce.vercel.app/"
+    },
+    {
+      "src": "/h2h/(.*)",
+      "dest": "https://h2h-puce.vercel.app/$1"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/content?path=api/$1"
+    },
+    {
+      "src": "/(.*)\\.md",
+      "dest": "/api/content?path=$1.md"
+    },
+    {
+      "src": "/(.*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": ".*text/markdown.*"
+        }
+      ],
+      "dest": "/api/content?path=$1"
+    },
+    {
+      "src": "/(.*)",
+      "headers": {
+        "Vary": "Accept"
+      },
+      "continue": true
+    },
+    {
+      "src": "/_astro/(.*)",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      },
+      "continue": true
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/404.html",
+      "status": 404
+    }
+  ]
 }
