@@ -29,3 +29,6 @@ vite.config.ts.timestamp-*
 
 # Generated Markdown response data
 /api/content-data.json
+
+# Unpublished local writing
+/drafts/

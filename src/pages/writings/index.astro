@@ -3,58 +3,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout title="Writings">
-	<article class="prose">
+	<article>
 		<h1>Writings</h1>
-
-		<div class="posts">
-			<a class="post" href="/writings/6356-claims-104-applied">
-				<h2>I Ingested 6,356 Podcast Claims and Applied 104</h2>
-				<p class="excerpt">
-					Building the pipeline was the easy part. Deciding what to ignore was not.
-				</p>
-				<p class="meta">9 August 2026</p>
-			</a>
-
-			<a class="post" href="/writings/home-was-never-set">
-				<h2>$HOME Was Never Set, and Modal Hung for Four Weeks</h2>
-				<p class="excerpt">
-					A Cloudflare container, an expanduser() call, and why local Docker couldn't reproduce it.
-				</p>
-				<p class="meta">9 August 2026</p>
-			</a>
-		</div>
+		<p>Nothing published yet.</p>
 	</article>
-
-	<style>
-		.prose h1 {
-			font-size: 2.3rem;
-			line-height: 1.2;
-			margin-bottom: 2rem;
-		}
-		.posts {
-			display: grid;
-			gap: 1.75rem;
-		}
-		.post {
-			display: block;
-			text-decoration: none;
-		}
-		.post h2 {
-			font-size: 1.3rem;
-			line-height: 1.4;
-			font-weight: 400;
-			text-decoration: underline;
-		}
-		.excerpt {
-			color: var(--text-primary);
-			margin-top: 0.4rem;
-			line-height: 1.6;
-		}
-		.meta {
-			font-family: var(--font-sans);
-			color: var(--text-secondary);
-			font-size: 0.85rem;
-			margin-top: 0.4rem;
-		}
-	</style>
 </BaseLayout>
+<style>
+	h1 {
+		font-size: 2.3rem;
+		line-height: 1.2;
+		margin-bottom: 2rem;
+	}
+</style>
