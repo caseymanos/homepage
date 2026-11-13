@@ -1,4 +1,6 @@
 import pages from './content-data.json' with { type: 'json' };
+import htmlPages from './html-data.json' with { type: 'json' };
+import { representation } from '../scripts/accept.mjs';
 import profile from './profile-data.json' with { type: 'json' };
 export default function handler(req, res) {
  const url = new URL(req.url, 'https://caseymanos.com');
@@ -15,6 +17,13 @@ export default function handler(req, res) {
  }
  if(pathname === '/api/profile') return send(200,'application/json',JSON.stringify(profile));
  if(isApi) return error(404,'not_found','No API endpoint exists at this path.','Use GET /api/profile. See https://caseymanos.com/openapi.json');
+ const explicitMarkdown = pathname.endsWith('.md');
+ const selected = explicitMarkdown ? 'markdown' : representation(req.headers?.accept);
+ if (!selected) return error(406, 'not_acceptable', 'No acceptable page representation.', 'Request text/html or text/markdown.');
+ if (selected === 'html') {
+  const html = htmlPages[pathname];
+  return send(html ? 200 : 404, 'text/html', html ?? htmlPages['/404']);
+ }
  if(pathname.endsWith('.md')) pathname=pathname.slice(0,-3);
  if(pathname==='/index') pathname='/';
  const content=pages[pathname];

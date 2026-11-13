@@ -1,6 +1,7 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 const pages = {};
+const htmlPages = {};
 const decode = s => s.replace(/&#x([\da-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n,16))).replace(/&#(\d+);/g, (_,n)=>String.fromCodePoint(+n)).replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&amp;/g,'&');
 async function walk(dir) {
  for (const entry of await readdir(dir,{withFileTypes:true})) {
@@ -11,6 +12,7 @@ async function walk(dir) {
   const main=html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1];
   if(!main) continue;
   const url='/'+path.relative('dist',file).replace(/index\.html$/,'').replace(/\.html$/,'').replace(/\/$/,'');
+  htmlPages[url || '/'] = html;
   let md=main.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi,'')
    .replace(/<pre\b[^>]*>([\s\S]*?)<\/pre>/gi,(_,code)=>'\n\n```\n'+decode(code.replace(/<[^>]+>/g,''))+'\n```\n\n')
    .replace(/<h([1-6])\b[^>]*>/gi,(_,n)=>'\n\n'+'#'.repeat(+n)+' ')
@@ -22,6 +24,8 @@ async function walk(dir) {
  }
 }
 await walk('dist');
+htmlPages['/404'] = await readFile('dist/404.html', 'utf8');
+await writeFile('api/html-data.json', JSON.stringify(htmlPages));
 await writeFile('api/content-data.json',JSON.stringify(pages,null,2)+'\n');
 const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+Object.keys(pages).map(p=>`<url><loc>https://caseymanos.com${p}</loc></url>`).join('')+'</urlset>\n';
 await writeFile('dist/sitemap.xml',xml);

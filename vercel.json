@@ -12,6 +12,10 @@
 			"dest": "https://h2h-puce.vercel.app/$1"
 		},
 		{
+			"src": "/api",
+			"dest": "/api/content?path=api"
+		},
+		{
 			"src": "/api/(.*)",
 			"dest": "/api/content?path=api/$1"
 		},

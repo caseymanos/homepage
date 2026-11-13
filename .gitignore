@@ -32,3 +32,5 @@ vite.config.ts.timestamp-*
 
 # Unpublished local writing
 /drafts/
+
+/api/html-data.json
