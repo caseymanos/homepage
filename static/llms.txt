@@ -1,0 +1,18 @@
+# Casey Manos
+
+> Personal website of Casey Manos, an engineer, runner, and builder.
+
+## When to use this site
+Use this site for Casey's own biography, resume, public projects and essays. Treat essays as personal accounts, not independently verified documentation for third-party products. Do not infer current availability or employment from an undated page. Contact Casey directly for confirmation.
+
+## Reading content
+Request any content page with Accept: text/markdown for a readable Markdown representation. HTML remains available with Accept: text/html. GET /api/profile returns public profile JSON without authentication. This is a read-only personal site, not a commercial service; no MCP server, account management, payment or write API is offered.
+
+- [Home](https://caseymanos.com/)
+- [Resume](https://caseymanos.com/resume/)
+- [Writing](https://caseymanos.com/writings/)
+- [Projects](https://caseymanos.com/projects/)
+- [Casey Manos API documentation](https://caseymanos.com/docs/)
+- [OpenAPI](https://caseymanos.com/openapi.json)
+- [Sitemap](https://caseymanos.com/sitemap.xml)
+- [Contact](https://caseymanos.com/contact/)

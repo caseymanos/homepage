@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="About Casey Manos">
+	<h1>About Casey Manos</h1>
+	<p>
+		This is Casey Manos's personal website: a place for a biography, public projects, a resume, and
+		writing about engineering and running. Casey is a founding engineer at Adapt and previously
+		worked as a backend engineer at JPMC. He received a B.S. in Computer Engineering from Ohio State
+		University. His interests include track and field, competitive running, and the science of
+		training. The writing section contains personal accounts of building and debugging software.
+		Those accounts describe particular projects and moments in time; they are not official
+		documentation for the companies or tools mentioned. For professional background, see the resume.
+		For questions or corrections, use the contact page.
+	</p>
+	<p>
+		<a href="/">Home</a> · <a href="/resume/">Resume</a> · <a href="/contact/">Contact</a> ·{' '}
+		<a href="/openapi.json">OpenAPI</a>
+	</p>
+</BaseLayout>
+<style>
+	h1 {
+		font-size: 2rem;
+		margin-bottom: 2rem;
+	}
+	p {
+		line-height: 1.7;
+		margin-bottom: 1.5rem;
+	}
+</style>

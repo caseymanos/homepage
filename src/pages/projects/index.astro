@@ -1,0 +1,280 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Projects - Casey Manos">
+	<article class="projects-page">
+		<header class="page-header">
+			<h1>Projects</h1>
+			<p class="subtitle">Things I've built, shipped, and obsessed over</p>
+		</header>
+
+		<!-- Featured Projects with Live Previews -->
+		<section class="featured-section">
+			<h2 class="section-title">
+				<span class="title-accent">●</span> Live Projects
+			</h2>
+
+			<div class="featured-grid">
+				<!-- node-webcodecs - Top Featured -->
+				<a
+					href="https://www.npmjs.com/package/node-webcodecs"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="project-card showcase"
+				>
+					<div class="card-preview dreamshot-preview">
+						<div class="preview-placeholder">
+							<div class="preview-gradient webcodecs-gradient"></div>
+							<div class="preview-content">
+								<span class="preview-icon">🎬</span>
+								<span class="preview-title">node-webcodecs</span>
+								<span class="preview-subtitle">npm i node-webcodecs</span>
+							</div>
+						</div>
+						<div class="preview-overlay">
+							<span class="preview-cta">View on npm →</span>
+						</div>
+					</div>
+					<div class="card-content">
+						<div class="card-header">
+							<h3>node-webcodecs</h3>
+							<span class="card-badge amber">Open Source</span>
+						</div>
+						<p class="card-tagline">WebCodecs for Node.js</p>
+						<p class="card-description">
+							Native WebCodecs API for Node.js — browser-standard video/audio encoding and decoding,
+							server-side. Supports H.264, HEVC, VP8/VP9, AV1, and AAC/Opus with hardware
+							acceleration. Available on npm and bun.
+						</p>
+						<div class="card-tech">
+							<span>Node.js</span>
+							<span>WebCodecs</span>
+							<span>C++</span>
+							<span>Video/Audio</span>
+						</div>
+					</div>
+				</a>
+
+				<!-- Dream Shot -->
+				<a
+					href="https://dreamshot-sleep-tracker.vercel.app"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="project-card showcase"
+				>
+					<div class="card-preview dreamshot-preview">
+						<div class="preview-placeholder">
+							<div class="preview-gradient"></div>
+							<div class="preview-content">
+								<span class="preview-icon">🌙</span>
+								<span class="preview-title">Dream Shot</span>
+								<span class="preview-subtitle">Sleep Analytics</span>
+							</div>
+						</div>
+						<div class="preview-overlay">
+							<span class="preview-cta">Visit Site →</span>
+						</div>
+					</div>
+					<div class="card-content">
+						<div class="card-header">
+							<h3>Dream Shot Sleep Tracker</h3>
+							<span class="card-badge purple">Analytics</span>
+						</div>
+						<p class="card-tagline">See Your Sleep Transform</p>
+						<p class="card-description">
+							Sleep analytics platform that parses data from Garmin, Oura, Whoop, and Apple Health
+							to measure the impact of sleep supplements. Beautiful visualizations show your
+							before/after sleep quality journey.
+						</p>
+						<div class="card-tech">
+							<span>Next.js</span>
+							<span>Data Viz</span>
+							<span>Health APIs</span>
+						</div>
+					</div>
+				</a>
+			</div>
+		</section>
+
+		<!-- Other Projects -->
+		<section class="projects-section">
+			<h2 class="section-title">
+				<span class="title-accent">●</span> More Work
+			</h2>
+
+			<div class="projects-list">
+				<!-- EP-133 Interactive Guide -->
+				<div class="project-item">
+					<div class="item-content">
+						<h3>EP-133 Interactive Guide</h3>
+						<p>
+							Voice-guided interactive lessons for the Teenage Engineering EP-133 K.O. II sampler.
+							Features step-by-step tutorials with visual button highlighting, auto-loop mode, and
+							ElevenLabs text-to-speech narration. Built as a gift for my dad!
+						</p>
+						<div class="item-tech">
+							<span>React</span>
+							<span>ElevenLabs TTS</span>
+							<span>SVG Animation</span>
+							<span>Tailwind</span>
+						</div>
+						<a href="/dad/" class="item-link">
+							Try it live →
+						</a>
+					</div>
+				</div>
+
+				<!-- OpenT3 Chat -->
+				<div class="project-item">
+					<div class="item-content">
+						<h3>OpenT3 Chat</h3>
+						<p>
+							Hackathon project built in under 24 hours—an open source clone of t3.chat with modern
+							AI development patterns. Streaming responses, context management, and real-time
+							interactions.
+						</p>
+						<div class="item-tech">
+							<span>Next.js</span>
+							<span>TypeScript</span>
+							<span>AI/ML</span>
+							<span>Hackathon</span>
+						</div>
+						<a
+							href="https://opent3.chat"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="item-link"
+						>
+							opent3.chat →
+						</a>
+					</div>
+				</div>
+
+				<!-- Metriq -->
+				<div class="project-item">
+					<div class="item-content">
+						<h3>Metriq</h3>
+						<p>
+							Cursor for data teams — a LangChain agent network that plans, codes, and verifies
+							complex analysis in Jupyter notebooks. Approached SOTA on industry benchmarks. Built
+							in under a week as a Gauntlet portfolio piece.
+						</p>
+						<div class="item-tech">
+							<span>LangChain</span>
+							<span>AI Agents</span>
+							<span>Jupyter</span>
+							<span>Python</span>
+						</div>
+						<a
+							href="https://getmetriq.dev"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="item-link"
+						>
+							getmetriq.dev →
+						</a>
+					</div>
+				</div>
+
+				<!-- Marathon Training App -->
+				<div class="project-item">
+					<div class="item-content">
+						<h3>Marathon Training App</h3>
+						<p>
+							Lead fullstack engineer for marathon training app with ~20k waitlisted users. Training
+							pace algorithms, nutrition guidelines, and lifting routines. Built the backend
+							infrastructure and mobile app from scratch.
+						</p>
+						<div class="item-tech">
+							<span>React Native</span>
+							<span>Supabase</span>
+							<span>AWS CDK</span>
+							<span>SQS</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</article>
+
+	<style>
+		.section-title,
+		.card-tech,
+		.item-tech,
+		.item-link {
+			font-family: var(--font-sans);
+		}
+		.projects-page {
+			max-width: 100%;
+		}
+		.page-header {
+			margin-bottom: 3rem;
+		}
+		.page-header h1 {
+			font-size: 2.75rem;
+			font-weight: 550;
+			letter-spacing: -0.05em;
+			line-height: 1.1;
+			margin-bottom: 1rem;
+		}
+		.subtitle {
+			color: var(--text-secondary);
+			font-size: 1rem;
+		}
+		.section-title {
+			font-size: 0.85rem;
+			font-weight: 600;
+			color: var(--text-secondary);
+			margin-bottom: 1.5rem;
+		}
+		.title-accent,
+		.card-preview,
+		.card-badge,
+		.card-tagline {
+			display: none;
+		}
+		.featured-section {
+			margin-bottom: 3rem;
+		}
+		.featured-grid,
+		.projects-list {
+			display: grid;
+			gap: 2rem;
+		}
+		.project-card {
+			display: block;
+		}
+		.card-header h3,
+		.item-content h3 {
+			font-size: 1.2rem;
+			font-weight: 550;
+			margin-bottom: 0.6rem;
+		}
+		.card-description,
+		.item-content p {
+			font-size: 1rem;
+			line-height: 1.7;
+			color: var(--text-secondary);
+		}
+		.card-tech,
+		.item-tech {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.8rem;
+			font-size: 0.7rem;
+			color: var(--text-secondary);
+			margin-top: 0.75rem;
+		}
+		.item-link {
+			display: inline-block;
+			margin-top: 0.8rem;
+			font-size: 0.85rem;
+			text-decoration: underline;
+		}
+		.project-card:hover h3 {
+			text-decoration: underline;
+			text-underline-offset: 0.2em;
+		}
+	</style>
+</BaseLayout>

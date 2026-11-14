@@ -1,0 +1,97 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Casey Manos public profile API",
+    "version": "1.0.0",
+    "description": "Read-only access to public personal profile information. No authentication required.",
+    "contact": {
+      "name": "Casey Manos",
+      "email": "manoscasey@gmail.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://caseymanos.com"
+    }
+  ],
+  "paths": {
+    "/api/profile": {
+      "get": {
+        "operationId": "getPublicProfile",
+        "summary": "Read Casey Manos public profile",
+        "description": "Returns the public name, description, contact email, site URL and profile links published on this personal website.",
+        "responses": {
+          "200": {
+            "description": "Public profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "description",
+                    "url",
+                    "email",
+                    "sameAs"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "sameAs": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured error with resolution guidance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "resolution": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "resolution"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

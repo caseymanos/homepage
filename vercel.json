@@ -1,12 +1,60 @@
 {
-  "rewrites": [
-    {
-      "source": "/h2h/:path*",
-      "destination": "https://h2h-puce.vercel.app/:path*"
-    },
-    {
-      "source": "/h2h",
-      "destination": "https://h2h-puce.vercel.app/"
-    }
-  ]
+	"framework": "astro",
+	"buildCommand": "npm run build",
+	"outputDirectory": "dist",
+	"routes": [
+		{
+			"src": "/h2h",
+			"dest": "https://h2h-puce.vercel.app/"
+		},
+		{
+			"src": "/h2h/(.*)",
+			"dest": "https://h2h-puce.vercel.app/$1"
+		},
+		{
+			"src": "/api",
+			"dest": "/api/content?path=api"
+		},
+		{
+			"src": "/api/(.*)",
+			"dest": "/api/content?path=api/$1"
+		},
+		{
+			"src": "/(.*)\\.md",
+			"dest": "/api/content?path=$1.md"
+		},
+		{
+			"src": "/(.*)",
+			"has": [
+				{
+					"type": "header",
+					"key": "accept",
+					"value": ".*text/markdown.*"
+				}
+			],
+			"dest": "/api/content?path=$1"
+		},
+		{
+			"src": "/(.*)",
+			"headers": {
+				"Vary": "Accept"
+			},
+			"continue": true
+		},
+		{
+			"src": "/_astro/(.*)",
+			"headers": {
+				"Cache-Control": "public, max-age=31536000, immutable"
+			},
+			"continue": true
+		},
+		{
+			"handle": "filesystem"
+		},
+		{
+			"src": "/(.*)",
+			"dest": "/404.html",
+			"status": 404
+		}
+	]
 }
